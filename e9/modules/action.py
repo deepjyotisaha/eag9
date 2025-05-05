@@ -5,16 +5,18 @@ from pydantic import BaseModel
 import asyncio
 import types
 import json
+from config.log_config import setup_logging
 
+logger = setup_logging(__name__)
 
 # Optional logging fallback
-try:
-    from agent import log
-except ImportError:
-    import datetime
-    def log(stage: str, msg: str):
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[{now}] [{stage}] {msg}")
+#try:
+#    from agent import log
+#except ImportError:
+#    import datetime
+#    def log(stage: str, msg: str):
+#        now = datetime.datetime.now().strftime("%H:%M:%S")
+#        print(f"[{now}] [{stage}] {msg}")
 
 class ToolCallResult(BaseModel):
     tool_name: str
@@ -25,7 +27,7 @@ class ToolCallResult(BaseModel):
 MAX_TOOL_CALLS_PER_PLAN = 5
 
 async def run_python_sandbox(code: str, dispatcher: Any) -> str:
-    print("[action] 🔍 Entered run_python_sandbox()")
+    logger.info("[action] 🔍 Entered run_python_sandbox()")
 
     # Create a fresh module scope
     sandbox = types.ModuleType("sandbox")
@@ -42,6 +44,7 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
                 if self.call_count > MAX_TOOL_CALLS_PER_PLAN:
                     raise RuntimeError(f"Exceeded max tool calls ({MAX_TOOL_CALLS_PER_PLAN}) in solve() plan.")
                 # REAL tool call now
+                logger.info(f"[action] 🔍 Calling actual tool inside sandbox: {tool_name}")
                 result = await self.dispatcher.call_tool(tool_name, input_dict)
                 return result
 
@@ -53,6 +56,7 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
         sandbox.__dict__["re"] = re
 
         # Execute solve fn dynamically
+        logger.info(f"[action] 🔍 Now executing solve fn dynamically")
         exec(compile(code, "<solve_plan>", "exec"), sandbox.__dict__)
 
         solve_fn = sandbox.__dict__.get("solve")
@@ -60,9 +64,13 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
             raise ValueError("No solve() function found in plan.")
 
         if asyncio.iscoroutinefunction(solve_fn):
+            logger.info(f"[action] 🔍 Executing solve fn asynchronously")
             result = await solve_fn()
         else:
+            logger.info(f"[action] 🔍 Executing solve fn synchronously")
             result = solve_fn()
+            
+        logger.info(f"[action] 🔍 Result of solve fn: {result}")
 
         # Clean result formatting
         if isinstance(result, dict) and "result" in result:
@@ -80,5 +88,5 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
 
 
     except Exception as e:
-        log("sandbox", f"⚠️ Execution error: {e}")
+        logger.error("sandbox", f"⚠️ Execution error: {e}")
         return f"[sandbox error: {str(e)}]"

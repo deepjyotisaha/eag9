@@ -10,14 +10,19 @@ from core.strategy import select_decision_prompt_path
 from core.context import AgentContext
 from modules.tools import summarize_tools
 import re
+from config.log_config import setup_logging
 
-try:
-    from agent import log
-except ImportError:
-    import datetime
-    def log(stage: str, msg: str):
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[{now}] [{stage}] {msg}")
+logger = setup_logging(__name__)
+
+#try:
+#    from agent import log
+#except ImportError:
+#    import datetime
+#    def log(stage: str, msg: str):
+#        now = datetime.datetime.now().strftime("%H:%M:%S")
+#        print(f"[{now}] [{stage}] {msg}")
+
+
 
 class AgentLoop:
     def __init__(self, context: AgentContext):
@@ -29,22 +34,23 @@ class AgentLoop:
         max_steps = self.context.agent_profile.strategy.max_steps
 
         for step in range(max_steps):
-            print(f"🔁 Step {step+1}/{max_steps} starting...")
+            logger.info(f"🔁 Step {step+1}/{max_steps} starting...")
             self.context.step = step
             lifelines_left = self.context.agent_profile.strategy.max_lifelines_per_step
 
             while lifelines_left >= 0:
                 # === Perception ===
                 user_input_override = getattr(self.context, "user_input_override", None)
+                logger.info(f"[perception] seeking perception for user input: {user_input_override or self.context.user_input}")
                 perception = await run_perception(context=self.context, user_input=user_input_override or self.context.user_input)
 
-                print(f"[perception] {perception}")
+                logger.info(f"[perception] {perception}")
 
                 selected_servers = perception.selected_servers
                 selected_tools = self.mcp.get_tools_from_servers(selected_servers)
                 if not selected_tools:
-                    log("loop", "⚠️ No tools selected — aborting step.")
-                    break
+                    logger.warning("loop: ⚠️ No tools selected — aborting step.")
+                    #break
 
                 # === Planning ===
                 tool_descriptions = summarize_tools(selected_tools)
@@ -62,11 +68,11 @@ class AgentLoop:
                     step_num=step + 1,
                     max_steps=max_steps,
                 )
-                print(f"[plan] {plan}")
+                logger.info(f"[plan] {plan}")
 
                 # === Execution ===
                 if re.search(r"^\s*(async\s+)?def\s+solve\s*\(", plan, re.MULTILINE):
-                    print("[loop] Detected solve() plan — running sandboxed...")
+                    logger.info("[loop] Detected solve() plan — running sandboxed...")
 
                     self.context.log_subtask(tool_name="solve_sandbox", status="pending")
                     result = await run_python_sandbox(plan, dispatcher=self.mcp)
@@ -85,6 +91,7 @@ class AgentLoop:
                                 success=True,
                                 tags=["sandbox"],
                             )
+                            logger.info(f"Adding tool output to memory: {result}")
                             return {"status": "done", "result": self.context.final_answer}
                         elif result.startswith("FURTHER_PROCESSING_REQUIRED:"):
                             content = result.split("FURTHER_PROCESSING_REQUIRED:")[1].strip()
@@ -96,8 +103,17 @@ class AgentLoop:
                                 f"FINAL_ANSWER: your answer\n\n"
                                 f"Otherwise, return the next FUNCTION_CALL."
                             )
-                            log("loop", f"📨 Forwarding intermediate result to next step:\n{self.context.user_input_override}\n\n")
-                            log("loop", f"🔁 Continuing based on FURTHER_PROCESSING_REQUIRED — Step {step+1} continues...")
+                            logger.info(f"Adding tool output to memory: {result}")
+                            self.context.update_subtask_status("solve_sandbox", "success")
+                            self.context.memory.add_tool_output(
+                                tool_name="solve_sandbox",
+                                tool_args={"plan": plan},
+                                tool_result={"result": result},
+                                success=True,
+                                tags=["sandbox"],
+                            )
+                            logger.info(f"📨 Forwarding intermediate result to next step:\n{self.context.user_input_override}\n\n")
+                            logger.info(f"🔁 Continuing based on FURTHER_PROCESSING_REQUIRED — Step {step+1} continues...")
                             break  # Step will continue
                         elif result.startswith("[sandbox error:"):
                             success = False
@@ -113,6 +129,7 @@ class AgentLoop:
                     else:
                         self.context.update_subtask_status("solve_sandbox", "failure")
 
+                    logger.info(f"Adding tool output to memory: {result}")
                     self.context.memory.add_tool_output(
                         tool_name="solve_sandbox",
                         tool_args={"plan": plan},
@@ -125,13 +142,13 @@ class AgentLoop:
                         return {"status": "done", "result": self.context.final_answer}
                     else:
                         lifelines_left -= 1
-                        log("loop", f"🛠 Retrying... Lifelines left: {lifelines_left}")
+                        logger.info(f"🛠 Retrying... Lifelines left: {lifelines_left}")
                         continue
                 else:
-                    log("loop", f"⚠️ Invalid plan detected — retrying... Lifelines left: {lifelines_left-1}")
+                    logger.error(f"⚠️ Invalid plan detected — retrying... Lifelines left: {lifelines_left-1}")
                     lifelines_left -= 1
                     continue
 
-        log("loop", "⚠️ Max steps reached without finding final answer.")
+        logger.error("⚠️ Max steps reached without finding final answer.")
         self.context.final_answer = "FINAL_ANSWER: [Max steps reached]"
         return {"status": "done", "result": self.context.final_answer}

@@ -9,14 +9,18 @@ import datetime
 from pathlib import Path
 import json
 import re
+from config.log_config import setup_logging
 
-def log(stage: str, msg: str):
-    """Simple timestamped console logger."""
-    now = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"[{now}] [{stage}] {msg}")
+logger = setup_logging(__name__)
+
+
+#def log(stage: str, msg: str):
+#    """Simple timestamped console logger."""
+#    now = datetime.datetime.now().strftime("%H:%M:%S")
+#    print(f"[{now}] [{stage}] {msg}")
 
 async def main():
-    print("🧠 Cortex-R Agent Ready")
+    logger.info("🧠 Cortex-R Agent Ready")
     current_session = None
 
     with open("config/profiles.yaml", "r") as f:
@@ -52,20 +56,20 @@ async def main():
                 if isinstance(result, dict):
                     answer = result["result"]
                     if "FINAL_ANSWER:" in answer:
-                        print(f"\n💡 Final Answer: {answer.split('FINAL_ANSWER:')[1].strip()}")
+                        logger.info(f"\n💡 Final Answer: {answer.split('FINAL_ANSWER:')[1].strip()}")
                         break
                     elif "FURTHER_PROCESSING_REQUIRED:" in answer:
                         user_input = answer.split("FURTHER_PROCESSING_REQUIRED:")[1].strip()
-                        print(f"\n🔁 Further Processing Required: {user_input}")
+                        logger.info(f"\n🔁 Further Processing Required: {user_input}")
                         continue  # 🧠 Re-run agent with updated input
                     else:
-                        print(f"\n💡 Final Answer (raw): {answer}")
+                        logger.info(f"\n💡 Final Answer (raw): {answer}")
                         break
                 else:
-                    print(f"\n💡 Final Answer (unexpected): {result}")
+                    logger.error(f"\n💡 Final Answer (unexpected): {result}")
                     break
     except KeyboardInterrupt:
-        print("\n👋 Received exit signal. Shutting down...")
+        logger.error("\n👋 Received exit signal. Shutting down...")
 
 if __name__ == "__main__":
     asyncio.run(main())

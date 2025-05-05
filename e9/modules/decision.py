@@ -4,15 +4,20 @@ from modules.memory import MemoryItem
 from modules.model_manager import ModelManager
 from modules.tools import load_prompt
 import re
+from config.log_config import setup_logging
+
+logger = setup_logging(__name__)
 
 # Optional logging fallback
-try:
-    from agent import log
-except ImportError:
-    import datetime
-    def log(stage: str, msg: str):
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[{now}] [{stage}] {msg}")
+#try:
+#    from agent import log
+#except ImportError:
+#    import datetime
+#    def log(stage: str, msg: str):
+#        now = datetime.datetime.now().strftime("%H:%M:%S")
+#        print(f"[{now}] [{stage}] {msg}")
+
+
 
 model = ModelManager()
 
@@ -33,17 +38,22 @@ async def generate_plan(
 
     memory_texts = "\n".join(f"- {m.text}" for m in memory_items) or "None"
 
+    logger.info(f"Memory texts: {memory_texts} \n\n")
+
     prompt_template = load_prompt(prompt_path)
 
     prompt = prompt_template.format(
         tool_descriptions=tool_descriptions,
-        user_input=user_input
+        user_input=user_input,
+        perception=perception,
+        memory_texts=memory_texts,
     )
 
+    logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
 
     try:
         raw = (await model.generate_text(prompt)).strip()
-        log("plan", f"LLM output: {raw}")
+        logger.info(f"LLM output: {raw}")
 
         # If fenced in ```python ... ```, extract
         if raw.startswith("```"):
@@ -54,10 +64,10 @@ async def generate_plan(
         if re.search(r"^\s*(async\s+)?def\s+solve\s*\(", raw, re.MULTILINE):
             return raw  # ✅ Correct, it's a full function
         else:
-            log("plan", "⚠️ LLM did not return a valid solve(). Defaulting to FINAL_ANSWER")
+            logger.error("plan", "⚠️ LLM did not return a valid solve(). Defaulting to FINAL_ANSWER")
             return "FINAL_ANSWER: [Could not generate valid solve()]"
 
 
     except Exception as e:
-        log("plan", f"⚠️ Planning failed: {e}")
+        logger.error("plan", f"⚠️ Planning failed: {e}")
         return "FINAL_ANSWER: [unknown]"

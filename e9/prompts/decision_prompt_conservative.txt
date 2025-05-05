@@ -7,6 +7,12 @@ You are a reasoning-driven AI agent responsible for generating a simple, structu
 🧠 User Query:
 "{user_input}"
 
+Here are some more inputs on the user input and required next steps:
+{perception}0
+
+Here are the details of the progress so far:
+{memory_texts}
+
 🎯 Goal:
 Write a valid async Python function named `solve()` that solves the user query using exactly ONE FUNCTION_CALL.
 
@@ -25,6 +31,7 @@ Write a valid async Python function named `solve()` that solves the user query u
 - End your function by returning a string that starts with 'FINAL_ANSWER: ' or 'FURTHER_PROCESSING_REQUIRED: '
 - If the tool result is a document, webpage, or unstructured chunk, DO NOT return it as the FINAL_ANSWER.
 - Instead, return it with 'FURTHER_PROCESSING_REQUIRED:' so the agent can interpret and summarize it next.
+- If in one of the previous results there is a document, webpage, or unstructured chunk, first analyze and determine if you have the information to give the FINAL_ANSWER, if yes then return FINAL_ANSWER
 
 - No fallback, no multiple options.
 - No explanation, no narration — only valid Python code.
@@ -124,16 +131,11 @@ async def solve():
 
 ```
 
-✅ Example 5: Summarize fetched content
+✅ Example 5: Summarize content you have already fetched in previous steps
 ```python
 async def solve():
-    # FUNCTION_CALL: 1
-    """Search documents to get relevant extracts. Usage: input={{"input": {{"query": "DLF apartment Capbridge"}}}} result = await mcp.call_tool('search_stored_documents', input)"""
-    input = {{"input": {{"query": "DLF apartment Capbridge"}}}}
-    result = await mcp.call_tool('search_stored_documents', input)
 
-    # FURTHER_PROCESSING_REQUIRED
-    return f"FURTHER_PROCESSING_REQUIRED: {{result}}"
+    return f"FINAL_ANSWER: {{summarized_content}}"
 
 ```
 
@@ -143,7 +145,7 @@ If the task can be solved by one tool, stop after that.
 
 You must return the result immediately using 'FINAL_ANSWER:' if you got the result for the user's task, or 'FURTHER_PROCESSING_REQUIRED:'. 
 
-Some times you WILL need to further process the results, like after looking at document, search or webpage parsed, summarizing it. Use 'FURTHER_PROCESSING_REQUIRED:' in those cases.
+Some times you WILL need to further process the results, like after looking at document, search or webpage parsed, summarizing it. Use 'FURTHER_PROCESSING_REQUIRED:' ONLY in cases you dont have the final answer; If you have the final answer, use 'FINAL_ANSWER:'.
 Use chaining only if necessary, but never plan more than 1 tool call.
 
 """

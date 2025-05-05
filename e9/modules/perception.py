@@ -8,15 +8,19 @@ from core.context import AgentContext
 
 import json
 
+from config.log_config import setup_logging
+
+logger = setup_logging(__name__)
+
 
 # Optional logging fallback
-try:
-    from agent import log
-except ImportError:
-    import datetime
-    def log(stage: str, msg: str):
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[{now}] [{stage}] {msg}")
+#try:
+#    from agent import log
+#except ImportError:
+#    import datetime
+#    def log(stage: str, msg: str):
+#        now = datetime.datetime.now().strftime("%H:%M:%S")
+#        print(f"[{now}] [{stage}] {msg}")
 
 model = ModelManager()
 
@@ -54,7 +58,7 @@ async def extract_perception(user_input: str, mcp_server_descriptions: dict) -> 
     try:
         raw = await model.generate_text(prompt)
         raw = raw.strip()
-        log("perception", f"Raw output: {raw}")
+        logger.info(f"Raw output: {raw}")
 
         # Try parsing into PerceptionResult
         json_block = extract_json_block(raw)
@@ -63,12 +67,12 @@ async def extract_perception(user_input: str, mcp_server_descriptions: dict) -> 
         # If selected_servers missing, fallback
         if "selected_servers" not in result:
             result["selected_servers"] = list(mcp_server_descriptions.keys())
-        print("result", result)
+        logger.info(f"result: {result}")
 
         return PerceptionResult(**result)
 
     except Exception as e:
-        log("perception", f"⚠️ Perception failed: {e}")
+        logger.error("perception", f"⚠️ Perception failed: {e}")
         # Fallback: select all servers
         return PerceptionResult(
             intent="unknown",
