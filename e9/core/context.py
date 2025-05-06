@@ -52,6 +52,12 @@ class AgentContext:
             uid = uuid.uuid4().hex[:6]
             session_id = f"{today.year}/{today.month:02}/{today.day:02}/session-{ts}-{uid}"
 
+        #if session_id is None:
+        #    today = datetime.now()
+        #    ts = int(time.time())
+        #    uid = uuid.uuid4().hex[:6]
+        #    session_id = f"{today.year}{today.month:02}{today.day:02}_{ts}_{uid}"
+
         self.user_input = user_input
         self.agent_profile = AgentProfile()
         self.memory = MemoryManager(session_id=session_id)
