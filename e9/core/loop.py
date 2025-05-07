@@ -53,11 +53,22 @@ class AgentLoop:
                     #break
 
                 # === Planning ===
+                logger.debug(f"[tools] Selected tools: {selected_tools}")
                 tool_descriptions = summarize_tools(selected_tools)
+                logger.debug(f"[tools] Tool descriptions: {tool_descriptions}")
                 prompt_path = select_decision_prompt_path(
                     planning_mode=self.context.agent_profile.strategy.planning_mode,
                     exploration_mode=self.context.agent_profile.strategy.exploration_mode,
                 )
+
+                # === Memory ===#
+                memory_lookup_queries = perception.memory_lookup_queries
+                logger.info(f"[memory] Memory lookup queries: {memory_lookup_queries}")
+
+                memory_lookup_tool_results = self.context.memory.get_tool_results_from_cache(selected_tools)
+                logger.info(f"[memory] Found {len(memory_lookup_tool_results)} tool results from cache")
+                logger.debug(f"[memory] Found the following tool results from cache: {memory_lookup_tool_results}")
+
 
                 plan = await generate_plan(
                     user_input=self.context.user_input,

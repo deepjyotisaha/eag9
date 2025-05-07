@@ -33,6 +33,7 @@ class PerceptionResult(BaseModel):
     tool_hint: Optional[str] = None
     tags: List[str] = []
     selected_servers: List[str] = []  # 🆕 NEW field
+    memory_lookup_queries: List[str] = []
 
 async def extract_perception(user_input: str, mcp_server_descriptions: dict) -> PerceptionResult:
     """

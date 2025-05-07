@@ -2,6 +2,9 @@
 
 from typing import List, Dict, Optional, Any
 import re
+from config.log_config import setup_logging
+
+logger = setup_logging(__name__)
 
 def extract_json_block(text: str) -> str:
     match = re.search(r"```json\n(.*?)```", text, re.DOTALL)
@@ -15,6 +18,7 @@ def summarize_tools(tools: List[Any]) -> str:
     Generate a string summary of tools for LLM prompt injection.
     Format: "- tool_name: description"
     """
+    logger.debug(f"[tools] Summarizing tools: {tools}")
     return "\n".join(
         f"- {tool.name}: {getattr(tool, 'description', 'No description provided.')}"
         for tool in tools

@@ -12,6 +12,10 @@ You are a perception engine helping an AI agent to decide which MCP server(s) ar
 - Extract important ENTITIES (e.g., company names, numbers, concepts).
 - Suggest a TOOL_HINT if you can guess a useful tool (optional).
 - Pick the most relevant MCP server IDs from the catalog above.
+- Suggest queries that can be looked up in the cached memory which can help perform the task better, this can be used for the following:
+  1. Add additonal information which is not already present in the current query, but may be present in cached memory
+  2. Similar queries which have already been solved might have some parts of the answer or the complete answer which might be helpful
+  3. Any additional information which might be needed
 
 📋 Your Output Format (in JSON):
 {{
@@ -19,6 +23,7 @@ You are a perception engine helping an AI agent to decide which MCP server(s) ar
   "entities": [...],
   "tool_hint": "...",
   "selected_servers": ["server1", "server2"]
+  "memory_lookup_queries": ["What information is available on God of Cricket", "What other sports are peferred by the user"]
 }}
 
 ✅ Rules:

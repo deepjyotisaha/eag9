@@ -49,7 +49,7 @@ async def generate_plan(
         memory_texts=memory_texts,
     )
 
-    logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
+    logger.debug(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
 
     try:
         raw = (await model.generate_text(prompt)).strip()

@@ -70,7 +70,7 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
             logger.info(f"[action] 🔍 Executing solve fn synchronously")
             result = solve_fn()
             
-        logger.info(f"[action] 🔍 Result of solve fn: {result}")
+        logger.debug(f"[action] 🔍 Result of solve fn: {result}")
 
         # Clean result formatting
         if isinstance(result, dict) and "result" in result:
