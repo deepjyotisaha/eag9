@@ -1,0 +1,181 @@
+[
+  {
+    "timestamp": 1746775015.4733934,
+    "type": "run_metadata",
+    "text": "Started new session with input: How much Anmol singh paid for his DLF apartment via Capbridge?  at 2025-05-09T07:16:55.473393",
+    "tool_name": null,
+    "tool_args": null,
+    "tool_result": null,
+    "final_answer": null,
+    "tags": [
+      "run_start"
+    ],
+    "success": null,
+    "metadata": {
+      "start_time": "2025-05-09T12:46:55.473393",
+      "step": 0
+    }
+  },
+  {
+    "timestamp": 1746775023.989345,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': \"[sandbox error: 'results']\"}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Search DuckDuckGo for \"Anmol Singh DLF apartment Capbridge price\" to find information about the transaction. (Pattern 1)\n    2. If the search returns results, use download_raw_html_from_url to get the content of the most relevant page. (Pattern 1)\n    3. Convert the webpage content into markdown to clean it. (Pattern 1)\n    4. Return the cleaned content for further processing. (Pattern 3)\n    \"\"\"\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"latest AI developments\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge price\", \"max_results\": 5}}\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    search_results = json.loads(result.content[0].text)[\"results\"]\n\n    if search_results:\n        # FUNCTION_CALL: 2\n        \"\"\"Fetch webpage content. Usage: input={\"input\": {\"url\": \"https://example.com\"} } result = await mcp.call_tool('download_raw_html_from_url', input)\"\"\"\n        input = {\"input\": {\"url\": search_results[0][\"href\"]}}\n        result = await mcp.call_tool('download_raw_html_from_url', input)\n        html_content = json.loads(result.content[0].text)[\"content\"]\n\n        # FUNCTION_CALL: 3\n        \"\"\"Convert webpage content into markdown to clean it.\"\"\"\n        input = {\"input\": {\"url\": search_results[0][\"href\"]}}\n        result = await mcp.call_tool('convert_webpage_url_into_markdown', input)\n        markdown_content = json.loads(result.content[0].text)[\"content\"]\n\n        # FURTHER_PROCESSING_REQUIRED\n        return f\"FURTHER_PROCESSING_REQUIRED: {markdown_content}\"\n    else:\n        return \"FINAL_ANSWER: No results found.\""
+    },
+    "tool_result": {
+      "result": "[sandbox error: 'results']"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": false,
+    "metadata": {}
+  },
+  {
+    "timestamp": 1746775034.160702,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': \"[sandbox error: 'results']\"}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Analyze the query and identify the key entities: Anmol Singh, DLF apartment, Capbridge, and the unknown transaction amount.\n    2. Use duckduckgo_search_results to find news articles or financial reports detailing the transaction between Anmol Singh, DLF apartment, and Capbridge.\n    3. If the search provides relevant URLs, download the content of these webpages using download_raw_html_from_url.\n    4. Extract the price paid by Anmol Singh for the DLF apartment via Capbridge from the downloaded webpage content.\n    5. Return the final answer.\n\n    Pattern: Sequential dependency\n    \"\"\"\n\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"latest AI developments\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge transaction\", \"max_results\": 5}}\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    search_results = json.loads(result.content[0].text)[\"results\"]\n\n    # Check if there are any search results\n    if not search_results:\n        return \"FINAL_ANSWER: No information found about Anmol Singh's DLF apartment purchase via Capbridge.\"\n\n    # Assuming the first search result is the most relevant one, extract the URL.\n    first_url = search_results[0][\"link\"]\n\n    # FUNCTION_CALL: 2\n    \"\"\"Fetch webpage content. Usage: input={\"input\": {\"url\": \"https://example.com\"} } result = await mcp.call_tool('download_raw_html_from_url', input)\"\"\"\n    input = {\"input\": {\"url\": first_url}}\n    result = await mcp.call_tool('download_raw_html_from_url', input)\n    downloaded_html = json.loads(result.content[0].text)[\"result\"]\n\n    return f\"FURTHER_PROCESSING_REQUIRED: {downloaded_html}\""
+    },
+    "tool_result": {
+      "result": "[sandbox error: 'results']"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": false,
+    "metadata": {}
+  },
+  {
+    "timestamp": 1746775041.842774,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': \"[sandbox error: 'results']\"}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Analyze the query and identify the key entities: Anmol Singh, DLF apartment, Capbridge, and the desired information (payment amount).\n    2. Use DuckDuckGo search to find information about Anmol Singh's DLF apartment purchase through Capbridge. (Pattern 1: Sequential dependency)\n    3. If the search returns relevant results, fetch the content of the webpages. (Pattern 1: Sequential dependency)\n    4. Return the raw HTML content for further processing. (Pattern 3: Fetch information chunk)\n    \"\"\"\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"latest AI developments\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge purchase price\", \"max_results\": 5}}\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    search_results = json.loads(result.content[0].text)[\"results\"]\n\n    # FUNCTION_CALL: 2\n    \"\"\"Fetch webpage content. Usage: input={\"input\": {\"url\": \"https://example.com\"} } result = await mcp.call_tool('download_raw_html_from_url', input)\"\"\"\n    if search_results:\n        first_url = search_results[0][\"link\"]\n        input = {\"input\": {\"url\": first_url}}\n        result = await mcp.call_tool('download_raw_html_from_url', input)\n        html_content = json.loads(result.content[0].text)[\"result\"]\n\n        return f\"FURTHER_PROCESSING_REQUIRED: {html_content}\"\n    else:\n        return \"FINAL_ANSWER: No relevant search results found.\""
+    },
+    "tool_result": {
+      "result": "[sandbox error: 'results']"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": false,
+    "metadata": {}
+  },
+  {
+    "timestamp": 1746775049.2119396,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': \"[sandbox error: 'results']\"}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Use duckduckgo_search_results to search for \"Anmol Singh DLF apartment Capbridge price\" to find information about the transaction. (Pattern 1)\n    2. If the search results are promising, extract the relevant URL from the search results.\n    3. Use download_raw_html_from_url to download the content of the webpage.\n    4. Use convert_webpage_url_into_markdown to convert the webpage content into markdown format.\n    5. Return the markdown content for further processing. (Pattern 3)\n    \"\"\"\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"latest AI developments\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge price\", \"max_results\": 5}}\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    search_results = json.loads(result.content[0].text)[\"results\"]\n\n    # FUNCTION_CALL: 2\n    \"\"\"Convert webpage content. Usage: input={{\"input\": {{\"url\": \"https://example.com\"}}}} result = await mcp.call_tool('convert_webpage_url_into_markdown', input)\"\"\"\n    if search_results:\n        first_url = search_results[0][\"link\"]\n        input = {\"input\": {\"url\": first_url}}\n        result = await mcp.call_tool('convert_webpage_url_into_markdown', input)\n        markdown_content = json.loads(result.content[0].text)[\"result\"]\n\n        # FURTHER_PROCESSING_REQUIRED\n        return f\"FURTHER_PROCESSING_REQUIRED: {markdown_content}\"\n    else:\n        return \"FINAL_ANSWER: Could not find information about the transaction.\""
+    },
+    "tool_result": {
+      "result": "[sandbox error: 'results']"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": false,
+    "metadata": {}
+  },
+  {
+    "timestamp": 1746775055.8879926,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': \"[sandbox error: 'results']\"}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Analyze the query: The query asks for the price Anmol Singh paid for a DLF apartment via Capbridge. This requires finding information about real estate transactions involving these entities.\n    2. Utilize web search to find relevant articles or press releases about Anmol Singh's real estate transactions, specifically those involving DLF apartments and Capbridge.\n    3. If the web search yields relevant URLs, download the content of these pages.\n    4. Return the content of the webpages for further processing.\n\n    Pattern: Fetch information chunk\n    \"\"\"\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"latest AI developments\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge transaction price\", \"max_results\": 5}}\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    search_results = json.loads(result.content[0].text)[\"results\"]\n\n    # FINAL_RESULT\n    return f\"FURTHER_PROCESSING_REQUIRED: {search_results}\""
+    },
+    "tool_result": {
+      "result": "[sandbox error: 'results']"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": false,
+    "metadata": {}
+  },
+  {
+    "timestamp": 1746775062.5478058,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': \"[sandbox error: 'results']\"}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Analyze the query and identify the key entities: Anmol Singh, DLF apartment, Capbridge, and the desired information: price paid.\n    2. Since the session memory indicates previous sandbox errors, a direct web search is the most reliable approach.\n    3. Use duckduckgo_search_results to search for \"Anmol Singh DLF apartment Capbridge price\" to find relevant articles or press releases.\n    4. If the search returns relevant results, extract the information about the price paid.\n    5. Return the final answer with the price information, if found, or indicate that the information could not be found.\n\n    Pattern: Sequential dependency (web search followed by information extraction).\n    \"\"\"\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"latest AI developments\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge price\", \"max_results\": 5}}\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    search_results = json.loads(result.content[0].text)[\"results\"]\n\n    # FINAL_RESULT\n    return f\"FURTHER_PROCESSING_REQUIRED: {search_results}\""
+    },
+    "tool_result": {
+      "result": "[sandbox error: 'results']"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": false,
+    "metadata": {}
+  },
+  {
+    "timestamp": 1746775070.308399,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': \"[sandbox error: 'results']\"}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Analyze the query: The query asks for the price Anmol Singh paid for a DLF apartment via Capbridge.\n    2. Use DuckDuckGo to search for news articles or real estate databases that might contain this information.\n    3. If search results are found, convert the URLs of promising articles into markdown for easier processing.\n    4. Return the markdown content for further processing. Pattern 3.\n    \"\"\"\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge purchase price\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge purchase price\", \"max_results\": 5} }\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    search_results = json.loads(result.content[0].text)[\"results\"]\n\n    # FUNCTION_CALL: 2\n    if search_results:\n        # Assuming the first result is the most relevant\n        first_url = search_results[0][\"link\"]\n        \"\"\"Convert webpage content to markdown. Usage: input={{\"input\": {{\"url\": \"https://example.com\"}}}} result = await mcp.call_tool('convert_webpage_url_into_markdown', input)\"\"\"\n        input = {\"input\": {\"url\": first_url}}\n        result = await mcp.call_tool('convert_webpage_url_into_markdown', input)\n        webpage_markdown = json.loads(result.content[0].text)[\"result\"]\n        return f\"FURTHER_PROCESSING_REQUIRED: {webpage_markdown}\"\n    else:\n        return \"FINAL_ANSWER: No relevant search results found.\""
+    },
+    "tool_result": {
+      "result": "[sandbox error: 'results']"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": false,
+    "metadata": {}
+  },
+  {
+    "timestamp": 1746775081.6265485,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': \"[sandbox error: 'results']\"}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Analyze Query: The user wants to know how much Anmol Singh paid for a DLF apartment via Capbridge.\n    2. Tool Selection: Use DuckDuckGo to search for news articles or real estate transactions related to Anmol Singh, DLF apartments, and Capbridge.\n    3. Pattern: Sequential dependency. First, search using DuckDuckGo. Then, if the search returns URLs, download and convert the webpages to markdown. Finally, search the stored documents. If no URLs, return the initial search result for further processing.\n    4. Reasoning: Start with a broad search. If URLs are found, attempt to extract information from the webpages. If no URLs are found, return the search result for someone to review. The goal is to find a specific price, so the search query will include \"price\" and \"amount paid\" related to the entities of interest.\n    \"\"\"\n\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"latest AI developments\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge price amount paid\", \"max_results\": 5}}\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    search_results = json.loads(result.content[0].text)[\"results\"]\n\n    if search_results:\n        # The search results contain URLs, so proceed to download and convert the webpages to markdown.\n        # For simplicity, just handle the first URL for now.\n        first_url = search_results[0][\"link\"]\n\n        # FUNCTION_CALL: 2\n        \"\"\"Convert webpage content into markdown. Usage: input={{\"input\": {{\"url\": \"https://example.com\"}}}} result = await mcp.call_tool('convert_webpage_url_into_markdown', input)\"\"\"\n        input = {\"input\": {\"url\": first_url}}\n        result = await mcp.call_tool('convert_webpage_url_into_markdown', input)\n        markdown_content = json.loads(result.content[0].text)[\"result\"]\n        return f\"FURTHER_PROCESSING_REQUIRED: {markdown_content}\"\n    else:\n        # No search results were found, so return the original search result for further processing.\n        return f\"FURTHER_PROCESSING_REQUIRED: {search_results}\""
+    },
+    "tool_result": {
+      "result": "[sandbox error: 'results']"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": false,
+    "metadata": {}
+  },
+  {
+    "timestamp": 1746775088.3532867,
+    "type": "tool_output",
+    "text": "Output of solve_sandbox: {'result': 'FURTHER_PROCESSING_REQUIRED: meta=None content=[TextContent(type=\\'text\\', text=\\'{\"result\": \"Found 5 search results:\\\\\\\\n\\\\\\\\n1. DLF Camellias flat for \\\\\\\\u20b943 cr, \\\\\\\\u20b96.2 cr to mother: Where Gensol funds ...\\\\\\\\n   URL: https://www.business-standard.com/companies/news/gensol-engineering-fraud-sebi-order-blusmart-anmol-jaggi-puneet-diversion-125041600349_1.html\\\\\\\\n   Summary: \\\\\\\\u20b950 crore was sent toCapbridgeVentures LLP, owned by the promoters \\\\\\\\u20b942.94 crore of that went into purchasing theDLFCamelliasapartmentAnother \\\\\\\\u20b943.69 crore loan saw \\\\\\\\u20b940 crore routed from Go-Auto to Wellray Solar Industries, a connected entity.\\\\\\\\n\\\\\\\\n2. DLF Camellias: SEBI flags \\\\\\\\u20b943 crore DLF\\\\\\'s apartment deal in Gensol ...\\\\\\\\n   URL: https://realty.economictimes.indiatimes.com/news/regulatory/sebi-flags-43-crore-dlfs-apartment-deal-in-gensol-engineering-probe/120338863\\\\\\\\n   Summary: A key transaction flagged by SEBI involvedDLF. Investigators traced \\\\\\\\u20b942.94 crore fromCapbridgeVentures LLP, a company where bothAnmoland PuneetSinghJaggi are designated partners, to a payment made toDLFfor anapartmentin \\\\\\\\\"The Camellias\\\\\\\\\" project.\\\\\\\\n\\\\\\\\n3. \\\\\\\\u20b950 crore DLF Camellias Gurgaon flat: Here\\\\\\'s how Anmol Singh ... - MSN\\\\\\\\n   URL: https://www.msn.com/en-in/money/news/50-crore-dlf-camellias-gurgaon-flat-heres-how-anmol-singh-jaggi-used-gensol-funds/ar-AA1D0hlx\\\\\\\\n   Summary: These funds were later transferred to Go-Auto, a car dealership firm related to the company. Go-Auto sent \\\\\\\\u20b9 50 crore toCapbridgeVentures, a firm controlled byAnmolSinghJaggi.\\\\\\\\n\\\\\\\\n4. Gensol promoters, Anmol and Puneet Singh Jaggi, detained in a FEMA case\\\\\\\\n   URL: https://economictimes.indiatimes.com/industry/renewables/gensol-promoters-anmol-and-puneet-singh-jaggi-detained-in-a-fema-case/articleshow/120590598.cms\\\\\\\\n   Summary: One of the most striking revelations was the use of Rs 42.94 crore, routed throughAnmolSinghJaggi\\\\\\'sCapbridgeVentures, to finance a luxuryapartmentinDLFCamellias. Additionally, Rs 50 lakh was allegedly invested in Ashneer Grover\\\\\\'s startup Third Unicorn, with other funds covering personal travel and leisure.\\\\\\\\n\\\\\\\\n5. Inside details: How Gensol promoter bought luxury DLF Camellias ...\\\\\\\\n   URL: https://economictimes.indiatimes.com/markets/stocks/news/inside-details-how-gensol-promoter-bought-luxury-dlf-camellias-apartment-in-gurgaon-with-diverted-funds/articleshow/120316216.cms\\\\\\\\n   Summary: Sebis interim order reveals Gensol promoterAnmolSinghJaggi diverted Rs 97 crore\\\\\\\\u2014sourced from company loans and funds\\\\\\\\u2014towards buying a luxuryapartmentinDLF\\\\\\'sThe Camellias via layered transactions through a car dealer and linked entities.\\\\\\\\n\"}\\', annotations=None)] isError=False'}",
+    "tool_name": "solve_sandbox",
+    "tool_args": {
+      "plan": "import json\nasync def solve():\n    # PLAN:\n    \"\"\"\n    1. Analyze the query: The query asks for the price Anmol Singh paid for a DLF apartment via Capbridge.\n    2. Use web search: Use DuckDuckGo search to find news articles or financial reports about this transaction.\n    3. Return the search results: Since the final answer requires parsing information from documents/webpages, return the search results for further processing.\n\n    Pattern: 3 (Fetch information chunk)\n    \"\"\"\n    # FUNCTION_CALL: 1\n    \"\"\"Search DuckDuckGo. Usage: input={\"input\": {\"query\": \"latest AI developments\", \"max_results\": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)\"\"\"\n    input = {\"input\": {\"query\": \"Anmol Singh DLF apartment Capbridge price\", \"max_results\": 5}}\n    result = await mcp.call_tool('duckduckgo_search_results', input)\n    \n    # FINAL_RESULT\n    return f\"FURTHER_PROCESSING_REQUIRED: {result}\""
+    },
+    "tool_result": {
+      "result": "FURTHER_PROCESSING_REQUIRED: meta=None content=[TextContent(type='text', text='{\"result\": \"Found 5 search results:\\\\n\\\\n1. DLF Camellias flat for \\\\u20b943 cr, \\\\u20b96.2 cr to mother: Where Gensol funds ...\\\\n   URL: https://www.business-standard.com/companies/news/gensol-engineering-fraud-sebi-order-blusmart-anmol-jaggi-puneet-diversion-125041600349_1.html\\\\n   Summary: \\\\u20b950 crore was sent toCapbridgeVentures LLP, owned by the promoters \\\\u20b942.94 crore of that went into purchasing theDLFCamelliasapartmentAnother \\\\u20b943.69 crore loan saw \\\\u20b940 crore routed from Go-Auto to Wellray Solar Industries, a connected entity.\\\\n\\\\n2. DLF Camellias: SEBI flags \\\\u20b943 crore DLF\\'s apartment deal in Gensol ...\\\\n   URL: https://realty.economictimes.indiatimes.com/news/regulatory/sebi-flags-43-crore-dlfs-apartment-deal-in-gensol-engineering-probe/120338863\\\\n   Summary: A key transaction flagged by SEBI involvedDLF. Investigators traced \\\\u20b942.94 crore fromCapbridgeVentures LLP, a company where bothAnmoland PuneetSinghJaggi are designated partners, to a payment made toDLFfor anapartmentin \\\\\"The Camellias\\\\\" project.\\\\n\\\\n3. \\\\u20b950 crore DLF Camellias Gurgaon flat: Here\\'s how Anmol Singh ... - MSN\\\\n   URL: https://www.msn.com/en-in/money/news/50-crore-dlf-camellias-gurgaon-flat-heres-how-anmol-singh-jaggi-used-gensol-funds/ar-AA1D0hlx\\\\n   Summary: These funds were later transferred to Go-Auto, a car dealership firm related to the company. Go-Auto sent \\\\u20b9 50 crore toCapbridgeVentures, a firm controlled byAnmolSinghJaggi.\\\\n\\\\n4. Gensol promoters, Anmol and Puneet Singh Jaggi, detained in a FEMA case\\\\n   URL: https://economictimes.indiatimes.com/industry/renewables/gensol-promoters-anmol-and-puneet-singh-jaggi-detained-in-a-fema-case/articleshow/120590598.cms\\\\n   Summary: One of the most striking revelations was the use of Rs 42.94 crore, routed throughAnmolSinghJaggi\\'sCapbridgeVentures, to finance a luxuryapartmentinDLFCamellias. Additionally, Rs 50 lakh was allegedly invested in Ashneer Grover\\'s startup Third Unicorn, with other funds covering personal travel and leisure.\\\\n\\\\n5. Inside details: How Gensol promoter bought luxury DLF Camellias ...\\\\n   URL: https://economictimes.indiatimes.com/markets/stocks/news/inside-details-how-gensol-promoter-bought-luxury-dlf-camellias-apartment-in-gurgaon-with-diverted-funds/articleshow/120316216.cms\\\\n   Summary: Sebis interim order reveals Gensol promoterAnmolSinghJaggi diverted Rs 97 crore\\\\u2014sourced from company loans and funds\\\\u2014towards buying a luxuryapartmentinDLF\\'sThe Camellias via layered transactions through a car dealer and linked entities.\\\\n\"}', annotations=None)] isError=False"
+    },
+    "final_answer": null,
+    "tags": [
+      "sandbox"
+    ],
+    "success": true,
+    "metadata": {}
+  }
+]

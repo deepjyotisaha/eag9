@@ -25,6 +25,39 @@ import re
 import base64 # ollama needs base64-encoded-image
 
 
+import logging
+import sys
+from pathlib import Path
+
+def setup_logging(module_name: str):
+    """
+    Simple logging setup with both file and console output
+    Args:
+        module_name: Name of the module for log messages
+    """
+    # Create logs directory if it doesn't exist
+    log_dir = Path(__file__).parent.parent / 'logs'
+    log_dir.mkdir(exist_ok=True)
+    
+    # Common log file path
+    log_file = log_dir / 'mcp_server_2.log'
+
+    # Format to include timestamp, level, module name, function name, line number
+    log_format = '%(asctime)s - %(levelname)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s'
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format=log_format,
+        handlers=[
+            logging.FileHandler(log_file, mode='w', encoding='utf-8'),
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+
+    return logging.getLogger(module_name)
+
+logger = setup_logging(__name__)
+
 mcp = FastMCP("Calculator")
 
 EMBED_URL = "http://localhost:11434/api/embeddings"
@@ -39,6 +72,8 @@ CHUNK_OVERLAP = 40
 MAX_CHUNK_LENGTH = 512  # characters
 TOP_K = 3  # FAISS top-K matches
 ROOT = Path(__file__).parent.resolve()
+
+
 
 
 def get_embedding(text: str) -> np.ndarray:
@@ -102,7 +137,7 @@ def search_stored_documents(input: SearchDocumentsInput) -> list[str]:
 
     ensure_faiss_ready()
     query = input.query
-    mcp_log("SEARCH", f"Query: {query}")
+    logger.info(f"Query: {query}")
     try:
         index = faiss.read_index(str(ROOT / "faiss_index" / "index.bin"))
         metadata = json.loads((ROOT / "faiss_index" / "metadata.json").read_text())

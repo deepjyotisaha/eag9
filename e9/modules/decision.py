@@ -51,10 +51,10 @@ async def generate_plan(
     perception_str = str(perception)
 
     prompt = prompt_template.format(
-        tool_descriptions=tool_descriptions,
         user_input=user_input,
-        perception=perception_str,
+        tool_descriptions=tool_descriptions,
         memory_texts=memory_texts,
+        perception=perception_str
     )
 
     #logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")

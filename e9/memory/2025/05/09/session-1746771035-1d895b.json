@@ -1,0 +1,19 @@
+[
+  {
+    "timestamp": 1746771035.6350136,
+    "type": "run_metadata",
+    "text": "Started new session with input: How much Anmol singh paid for his DLF apartment via Capbridge?  at 2025-05-09T06:10:35.635013",
+    "tool_name": null,
+    "tool_args": null,
+    "tool_result": null,
+    "final_answer": null,
+    "tags": [
+      "run_start"
+    ],
+    "success": null,
+    "metadata": {
+      "start_time": "2025-05-09T11:40:35.635013",
+      "step": 0
+    }
+  }
+]
