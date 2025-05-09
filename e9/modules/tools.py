@@ -3,7 +3,7 @@
 from typing import List, Dict, Optional, Any
 import re
 from config.log_config import setup_logging
-from modules.memory import MemoryItem 
+from modules.memory import MemoryItem, MemoryManager
 
 logger = setup_logging(__name__)
 

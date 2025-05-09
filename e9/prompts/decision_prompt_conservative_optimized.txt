@@ -21,7 +21,7 @@ Here are few patterns that you can implement inside the solve() function:
 1. Sequential dependency: Chain tool outputs until final result, return f"FINAL_ANSWER: {{final_result}}"
 2. Independent sequential: Merge results in final answer, return f"FINAL_ANSWER: Wikipedia says {{tool_result_a}}. News says {{tool_result_b}}"
 3. Fetch information chunk: Obtain information chunks using tools, don't parse or prcocess further if previous results failed, ALWAYS return f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
-4. Fallback logic: Check for errors and try with alternative tools or approach.
+4. Fallback logic: Check for errors and try with alternative tools or approach. If tool retries fail for more than 2 times, subsitute result = get_tool_output_from_cache(tool_name, {tool_output_from_cache})
 5. Session memory summary: Use stored content to return f"FINAL_ANSWER: {{summarized_content}}"
 
 ✅ Sample Format for solve(): 
@@ -42,7 +42,11 @@ async def solve():
     # FUNCTION_CALL: 2
      """Sum exponentials of int list. Usage: input={{"input": {{"numbers": [65, 66, 67]}}}} result = await mcp.call_tool('int_list_to_exponential_sum', input)"""
     input = {{"input": {{"numbers": numbers}}}}
-    result = await mcp.call_tool('int_list_to_exponential_sum', input)
+    try:
+        result = await mcp.call_tool('int_list_to_exponential_sum', input)
+    catch:
+        result = tool_output_from_cache(int_list_to_exponential_sum, {tool_output_from_cache})
+        
     final_result = json.loads(result.content[0].text)["result"]
 
     # FINAL_RESULT
