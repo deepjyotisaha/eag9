@@ -22,7 +22,7 @@ Here are few patterns that you can implement inside the solve() function:
 1. Dependent sequential tool use: Parse each tool's output for the next call until final result, returning f"FINAL_ANSWER: {{final_result}}".
 2. Independent sequential tool use: Merge multiple tool outputs for final result, example return f"FINAL_ANSWER: Wikipedia says {{tool_result_a}}. News says {{tool_result_b}}".
 3. Fallback logic: Use pattern 1 or 2 but implement alternative calls if errors occur, (use try/catch)
-4. Further processing required: Extract info but need more for next action, returning f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
+4. Further processing required: Extract info (document/webpage chunks etc.) & need more for next action, NEVER parse & return f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
 5. Summarize Session Memory: Summarize FINAL_ANSWER using stored content without tool calls, returning f"FINAL_ANSWER: {{summarized_content}}"
 
 
@@ -56,23 +56,20 @@ async def solve():
 
 ```
 
-
 📏 STRICT RULES:
-- Note: While adding the PLAN in the solve() always check if you are violating any STRICT RULES
-- Each tool call must follow the Usage docstring format exactly.
-- You MUST call only those tools that are available in Tool Catalog.
-- Call a tool using its tool name string, not function variable.
-  E.g., await mcp.call_tool('add', input)
-  (NOT await mcp.call_tool(add, input))
-- Before each tool call, paste the full tool docstring enclosed in triple quotes (""").
-- Call the tool exactly as per its function signature: tool(input)
-- If one FUNCTION_CALL depends on another, parse the previous result using json.loads(result.content[0].text)["result"] to extract the value from the tool's JSON output.
--❗Important: Never inline json.loads(...) inside f"" strings. Always assign it to a variable first (e.g., parsed = json.loads(...)["result"]) and use that in return f"FINAL_ANSWER: {{parsed}}".
-- End your function by returning a string that starts with 'FINAL_ANSWER: ' or 'FURTHER_PROCESSING_REQUIRED: '
-- NEVER return any tool result which is a document, webpage, or unstructured chunk as the FINAL_ANSWER. Instead, return it with 'FURTHER_PROCESSING_REQUIRED:' so the agent can interpret and summarize it next.
-- No multiple options.
-- No explanation, no narration — only valid Python code.
-- If the user input already includes clean extracted webpage/document content, do NOT call the tool again. Summarize or generate the final answer from it.
+- Validate PLAN against rules.
+- Follow exact Usage docstring format for tool calls.
+- Use only available tools from Tool Catalog.
+- Call tools by name (await mcp.call_tool('tool_name', input)).
+- Precede calls with full docstring ("""docstring""").
+- Use function signature (tool(input)).
+- Parse dependent results (parsed = json.loads(result.content[0].text)["result"]).
+- Never inline json.loads(...) in f-strings; assign to variable first.
+- Return FINAL_ANSWER: {{parsed}} or FURTHER_PROCESSING_REQUIRED: {{tool_result}}.
+- NEVER parse document/webpage chunks to look for FINAL_ANSWER, always return FURTHER_PROCESSING_REQUIRED
+- No document/webpage chunks in FINAL_ANSWER.
+- No multiple options, no narration—only Python code.
+- If input has extracted content, summarize—no redundant tool calls.
 
 """
 
