@@ -62,19 +62,21 @@ class AgentLoop:
                 )
 
                 # === Memory ===#
+
+                # Get additional facts from memory
                 memory_lookup_queries = perception.memory_lookup_queries
                 logger.info(f"[memory] Memory lookup queries: {memory_lookup_queries}")
 
+                # Get tool results from cache   
                 memory_lookup_tool_results = self.context.memory.get_tool_results_from_cache(selected_tools)
                 logger.info(f"[memory] Found {len(memory_lookup_tool_results)} tool results from cache")
-                logger.debug(f"[memory] Found the following tool results from cache: {memory_lookup_tool_results}")
-
-
+                
                 plan = await generate_plan(
                     user_input=self.context.user_input,
                     perception=perception,
                     memory_items=self.context.memory.get_session_items(),
                     tool_descriptions=tool_descriptions,
+                    tool_output_from_cache=memory_lookup_tool_results,
                     prompt_path=prompt_path,
                     step_num=step + 1,
                     max_steps=max_steps,

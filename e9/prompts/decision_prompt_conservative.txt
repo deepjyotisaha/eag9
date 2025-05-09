@@ -8,10 +8,13 @@ You are a reasoning-driven AI agent responsible for generating a simple, structu
 "{user_input}"
 
 Here are some more inputs on the user input and required next steps:
-{perception}0
+{perception}
 
-Here are the details of the progress so far:
+Here are the details of the progress so far in the current session:
 {memory_texts}
+
+Here are the successfull tool results from the cached sessions (TO BE USED ONLY AS FALLBACK):
+{tool_output_from_cache}
 
 🎯 Goal:
 Write a valid async Python function named `solve()` that solves the user query using exactly ONE FUNCTION_CALL.
@@ -32,10 +35,16 @@ Write a valid async Python function named `solve()` that solves the user query u
 - If the tool result is a document, webpage, or unstructured chunk, DO NOT return it as the FINAL_ANSWER.
 - Instead, return it with 'FURTHER_PROCESSING_REQUIRED:' so the agent can interpret and summarize it next.
 - If in one of the previous results there is a document, webpage, or unstructured chunk, first analyze and determine if you have the information to give the FINAL_ANSWER, if yes then return FINAL_ANSWER
-
-- No fallback, no multiple options.
+- No multiple options.
 - No explanation, no narration — only valid Python code.
 - If the user input already includes clean extracted webpage/document content, do NOT call the tool again. Summarize or generate the final answer from it.
+
+FALLBACK:
+- You must use the cached results only as a fallback if you have encountered error in executing tools for more than 2 times
+- If you have encountered error in executing tools for more than 2 times, do not repeat the same tool call again
+- Instead, you have access to tool results from cached sessions; ALWAYS refer to cached tool results as fallback if you have encountered error in executing tools for more than 2 attempts in the current session.
+- You must use the cached tool results as a fallback to try and determine the final FINAL_ANSWER.
+- if you are able to determine the 'FINAL_ANSWER' from cached sessions, give the FINAL_ANSWER else return 'FURTHER_PROCESSING_REQUIRED'
 
 
 ✅ Example 1: Output of last function parsed for next function
@@ -131,7 +140,7 @@ async def solve():
 
 ```
 
-✅ Example 5: Summarize content you have already fetched in previous steps
+✅ Example 5: Summarize content you have already fetched in previous steps or summarize from cached tool results
 ```python
 async def solve():
 
@@ -146,6 +155,6 @@ If the task can be solved by one tool, stop after that.
 You must return the result immediately using 'FINAL_ANSWER:' if you got the result for the user's task, or 'FURTHER_PROCESSING_REQUIRED:'. 
 
 Some times you WILL need to further process the results, like after looking at document, search or webpage parsed, summarizing it. Use 'FURTHER_PROCESSING_REQUIRED:' ONLY in cases you dont have the final answer; If you have the final answer, use 'FINAL_ANSWER:'.
-Use chaining only if necessary, but never plan more than 1 tool call.
+Use chaining only if necessary, but never plan more than 1 tool call. Always check previous tool results from cached sessions as a fallback to derive FINAL_ANSWER incase of tool execution errors.
 
 """

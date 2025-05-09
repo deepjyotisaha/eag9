@@ -46,6 +46,7 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
                 # REAL tool call now
                 logger.info(f"[action] 🔍 Calling actual tool inside sandbox: {tool_name}")
                 result = await self.dispatcher.call_tool(tool_name, input_dict)
+                #result = "Tool call failed for tool: {tool_name}"
                 return result
 
         sandbox.mcp = SandboxMCP(dispatcher)
@@ -88,5 +89,5 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
 
 
     except Exception as e:
-        logger.error("sandbox", f"⚠️ Execution error: {e}")
+        logger.error(f"[action] ⚠️ sandbox execution error: {e}")
         return f"[sandbox error: {str(e)}]"

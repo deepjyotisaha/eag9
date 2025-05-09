@@ -3,6 +3,7 @@
 from typing import List, Dict, Optional, Any
 import re
 from config.log_config import setup_logging
+from modules.memory import MemoryItem 
 
 logger = setup_logging(__name__)
 
@@ -55,3 +56,34 @@ def tool_expects_input(self, tool_name: str) -> bool:
 def load_prompt(path: str) -> str:
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
+    
+
+def get_tool_output_from_cache(tool_name: str, memory_items: List[MemoryItem]) -> Optional[str]:
+    """
+    Get the most recent successful tool output from cache for a specific tool.
+    
+    Args:
+        tool_name (str): The name of the tool to search for
+        memory_items (List[MemoryItem]): List of memory items to search through
+        
+    Returns:
+        Optional[str]: The most recent successful tool output result, or None if not found
+    """
+    # Search from newest to oldest for the most recent successful output
+    for item in reversed(memory_items):
+        if (item.type == "tool_output" and 
+            item.tool_name == tool_name and 
+            item.success and 
+            item.tool_result is not None):
+            
+            # Extract the result from tool_result
+            if isinstance(item.tool_result, dict) and "result" in item.tool_result:
+                return item.tool_result["result"]
+            elif isinstance(item.tool_result, str):
+                return item.tool_result
+            else:
+                return str(item.tool_result)
+    
+    return None
+
+

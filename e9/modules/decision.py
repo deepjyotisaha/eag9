@@ -3,6 +3,7 @@ from modules.perception import PerceptionResult
 from modules.memory import MemoryItem
 from modules.model_manager import ModelManager
 from modules.tools import load_prompt
+from modules.tools import get_tool_output_from_cache
 import re
 from config.log_config import setup_logging
 
@@ -29,6 +30,7 @@ async def generate_plan(
     perception: PerceptionResult,
     memory_items: List[MemoryItem],
     tool_descriptions: Optional[str],
+    tool_output_from_cache: Optional[str],
     prompt_path: str,
     step_num: int = 1,
     max_steps: int = 3,
@@ -40,16 +42,22 @@ async def generate_plan(
 
     logger.info(f"Memory texts: {memory_texts} \n\n")
 
+    prompt_path = "prompts/decision_prompt_conservative_optimized.txt"
+
+    logger.info(f"Prompt path: {prompt_path}")
+
     prompt_template = load_prompt(prompt_path)
+
+    perception_str = str(perception)
 
     prompt = prompt_template.format(
         tool_descriptions=tool_descriptions,
         user_input=user_input,
-        perception=perception,
+        perception=perception_str,
         memory_texts=memory_texts,
     )
 
-    logger.debug(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
+    logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
 
     try:
         raw = (await model.generate_text(prompt)).strip()
