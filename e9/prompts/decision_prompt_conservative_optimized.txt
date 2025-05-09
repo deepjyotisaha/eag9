@@ -19,11 +19,12 @@ Approach:
 📋 Perception Inputs: {perception}
 
 Here are few patterns that you can implement inside the solve() function:
-1. Pattern 1: Make dependent sequential tool use to determine the final result, where output of last tool call is parsed for next tool call, till you have the final result, you must return f"FINAL_ANSWER: {{final_result}}"
-2. Pattern 2: Make independent but sequential tool use to determine the final result, where outputs of multiple tool calls come together to determine the final result, you must return f"FINAL_ANSWER: Wikipedia says {{tool_result_a}}. News says {{tool_result_b}}."
-3. Pattern 3: Use either pattern 1 or 2, but implement fallback logic (with try/catch) if you see tool errors; if you see a tool error, you implement an alternative tool call to determine the final result with suitable inputs, you must return f"FINAL_ANSWER: {{final_result}}"
-4. Pattern 4: Fetch information but further processing required; Fetch a document or webpage or similar example where you extract information using a tool call, but need more information to take next action, in such cases you must return f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
-5. Pattern 5: Have information in "Session Memory" to summarize FINAL_ANSWER; you already have the information in "Session Memory" to return FINAL_ANSWER, DO NOT make any tool calls in this case, and you must return f"FINAL_ANSWER: {{summarized_content}}".
+1. Dependent sequential tool use: Parse each tool's output for the next call until final result, returning f"FINAL_ANSWER: {{final_result}}".
+2. Independent sequential tool use: Merge multiple tool outputs for final result, example return f"FINAL_ANSWER: Wikipedia says {{tool_result_a}}. News says {{tool_result_b}}".
+3. Fallback logic: Use pattern 1 or 2 but implement alternative calls if errors occur, (use try/catch)
+4. Further processing required: Extract info but need more for next action, returning f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
+5. Summarize Session Memory: Summarize FINAL_ANSWER using stored content without tool calls, returning f"FINAL_ANSWER: {{summarized_content}}"
+
 
 ✅ Sample Format for solve(): 
 ```python
@@ -31,13 +32,12 @@ import json
 async def solve():
     # PLAN:
     """ 
-    Pattern Used: This is pattern 1 where we are calling tools in sequential order
+    Pattern Used: This is pattern #1 where we are calling tools in sequential order
     Step 1: First invoke strings_to_chars_to_int tools available in "Session Catalog" with the input
     Step 2: Parse the outputs and pass the same to int_list_to_exponential_sum
     Step 3: Determine the FINAL_ANSWER from the output of int_list_to_exponential_sum
     Reasoning: This pattern was used because the inputs needed to be processed in an order using tools int_list_to_exponential_sum first and then using int_list_to_exponential_sum to determine the final_result. 
-    Final Result Source: The final result was summarized from the output of int_list_to_exponential_sum <Add only when you return FINAL_ANSWER>
-    Note: While adding the PLAN in the solve() always check if you are violating any STRICT RULES
+    Final Result Source: The final result was summarized from the output of int_list_to_exponential_sum obtained from either tool execution or from session memory which has output of tool int_list_to_exponential_sum <Add only when you return FINAL_ANSWER and not for FURTHER_PROCESSING_REQUIRED>
     """
     # FUNCTION_CALL: 1
     """Convert characters to ASCII values. Usage: input={{"input": {{"string": "INDIA"}}}} result = await mcp.call_tool('strings_to_chars_to_int', input)"""
@@ -58,6 +58,7 @@ async def solve():
 
 
 📏 STRICT RULES:
+- Note: While adding the PLAN in the solve() always check if you are violating any STRICT RULES
 - Each tool call must follow the Usage docstring format exactly.
 - You MUST call only those tools that are available in Tool Catalog.
 - Call a tool using its tool name string, not function variable.
