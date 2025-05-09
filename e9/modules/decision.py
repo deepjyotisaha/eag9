@@ -3,9 +3,10 @@ from modules.perception import PerceptionResult
 from modules.memory import MemoryItem
 from modules.model_manager import ModelManager
 from modules.tools import load_prompt
-from modules.tools import get_tool_output_from_cache
 import re
 from config.log_config import setup_logging
+from core.context import AgentContext
+
 
 logger = setup_logging(__name__)
 
@@ -34,13 +35,16 @@ async def generate_plan(
     prompt_path: str,
     step_num: int = 1,
     max_steps: int = 3,
+    lifelines_left: int = 3,
 ) -> str:
 
     """Generates the full solve() function plan for the agent."""
 
-    memory_texts = "\n".join(f"- {m.text}" for m in memory_items) or "None"
+    #memory_texts = "\n".join(f"- {m.text}" for m in memory_items) or "None"
+    #memory_texts = context.format_history_for_llm() if context.tool_calls else "No previous actions"
+    memory_texts = memory_items
 
-    logger.info(f"Memory texts: {memory_texts} \n\n")
+    #logger.info(f"Memory texts: {memory_texts} \n\n")
 
     prompt_path = "prompts/decision_prompt_conservative_optimized.txt"
 
@@ -55,7 +59,9 @@ async def generate_plan(
         tool_descriptions=tool_descriptions,
         memory_texts=memory_texts,
         perception=perception_str,
-        tool_output_from_cache=tool_output_from_cache
+        step_num=step_num,
+        max_steps=max_steps,
+        lifelines_left=lifelines_left
     )
 
     #logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")

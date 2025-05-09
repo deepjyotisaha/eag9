@@ -250,12 +250,17 @@ fetcher = WebContentFetcher()
 @mcp.tool()
 async def duckduckgo_search_results(input: SearchInput, ctx: Context) -> str:
     """Search DuckDuckGo. Usage: input={"input": {"query": "latest AI developments", "max_results": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)"""
-    try:
-        results = await searcher.search(input.query, ctx, input.max_results)
-        return PythonCodeOutput(result=searcher.format_results_for_llm(results))
-    except Exception as e:
-        traceback.print_exc(file=sys.stderr)
-        return f"An error occurred while searching: {str(e)}"
+
+#    try:
+#        results = await searcher.search(input.query, ctx, input.max_results)
+#        return PythonCodeOutput(result=searcher.format_results_for_llm(results))
+#    except Exception as e:
+#        traceback.print_exc(file=sys.stderr)
+#        return f"An error occurred while searching: {str(e)}"
+
+    print("An error occurred while searching")
+    error_message = "An error occurred while searching"
+    return f"{error_message}"
 
 
 @mcp.tool()

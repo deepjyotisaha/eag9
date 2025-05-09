@@ -6,6 +6,7 @@ import asyncio
 import types
 import json
 from config.log_config import setup_logging
+from core.context import AgentContext
 
 logger = setup_logging(__name__)
 
@@ -26,35 +27,50 @@ class ToolCallResult(BaseModel):
 
 MAX_TOOL_CALLS_PER_PLAN = 5
 
-async def run_python_sandbox(code: str, dispatcher: Any) -> str:
+async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) -> str:
     logger.info("[action] 🔍 Entered run_python_sandbox()")
 
     # Create a fresh module scope
     sandbox = types.ModuleType("sandbox")
 
     try:
-        # Patch MCP client with real dispatcher
+        # Patch MCP client with real dispatcher and context
         class SandboxMCP:
-            def __init__(self, dispatcher):
+            def __init__(self, dispatcher, context):
                 self.dispatcher = dispatcher
                 self.call_count = 0
+                self.memory = context.memory
 
             async def call_tool(self, tool_name: str, input_dict: dict):
                 self.call_count += 1
                 if self.call_count > MAX_TOOL_CALLS_PER_PLAN:
                     raise RuntimeError(f"Exceeded max tool calls ({MAX_TOOL_CALLS_PER_PLAN}) in solve() plan.")
-                # REAL tool call now
                 logger.info(f"[action] 🔍 Calling actual tool inside sandbox: {tool_name}")
                 result = await self.dispatcher.call_tool(tool_name, input_dict)
-                #result = "Tool call failed for tool: {tool_name}"
+                logger.info(f"[action] 🔍 Result of tool call: {result}")
                 return result
 
-        sandbox.mcp = SandboxMCP(dispatcher)
+            def get_tool_results_from_cache(self, tools):
+                """Access memory manager's get_tool_results_from_cache"""
+                return self.memory.get_tool_results_from_cache(tools)
+
+        sandbox.mcp = SandboxMCP(dispatcher, context)
+
+         # Create a standalone function that uses the mcp instance
+        def get_tool_results_from_cache(tool_name):
+            cached_results = sandbox.mcp.get_tool_results_from_cache([tool_name])
+            if cached_results and len(cached_results) > 0:
+                # Get the most recent result
+                latest_result = cached_results[0]
+                # Return the exact tool_result as it was stored
+                return latest_result.tool_result
+            return None
 
         # Preload safe built-ins into the sandbox
         import json, re
         sandbox.__dict__["json"] = json
         sandbox.__dict__["re"] = re
+        sandbox.__dict__["get_tool_results_from_cache"] = get_tool_results_from_cache
 
         # Execute solve fn dynamically
         logger.info(f"[action] 🔍 Now executing solve fn dynamically")
@@ -71,7 +87,7 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
             logger.info(f"[action] 🔍 Executing solve fn synchronously")
             result = solve_fn()
             
-        logger.debug(f"[action] 🔍 Result of solve fn: {result}")
+        logger.info(f"[action] 🔍 Result of solve fn: {result}")
 
         # Clean result formatting
         if isinstance(result, dict) and "result" in result:
@@ -82,11 +98,6 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
             return f"{' '.join(str(r) for r in result)}"
         else:
             return f"{result}"
-
-
-
-
-
 
     except Exception as e:
         logger.error(f"[action] ⚠️ sandbox execution error: {e}")

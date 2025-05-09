@@ -34,19 +34,19 @@ persona:
 mcp_servers:
   - id: math
     script: mcp_server_1.py
-    cwd: C:/Users/dsaha/OneDrive - Microsoft/Documents/Personal/deep/study/artificial intelligence/eagv1/eag9/sample
+    cwd: C:/Users/dsaha/OneDrive - Microsoft/Documents/Personal/deep/study/artificial intelligence/eagv1/eag9/e9
     description: "Most used Math tools, including special string-int conversions, fibonacci, python sandbox, shell and sql related tools"
     capabilities: ["add", "subtract", "multiply", "divide", "power", "cbrt", "factorial", "remainder", "sin", "cos", "tan", "mine", "create_thumbnail", "strings_to_chars_to_int", "int_list_to_exponential_sum", "fibonacci_numbers"]
     basic_tools: [run_python_sandbox]
   - id: documents
     script: mcp_server_2.py
-    cwd: C:/Users/dsaha/OneDrive - Microsoft/Documents/Personal/deep/study/artificial intelligence/eagv1/eag9/sample
+    cwd: C:/Users/dsaha/OneDrive - Microsoft/Documents/Personal/deep/study/artificial intelligence/eagv1/eag9/e9
     description: "Load, search and extract within webpages, local PDFs or other documents. Web and document specialist"
     capabilities: ["search_stored_documents", "convert_webpage_url_into_markdown", "extract_pdf"]
     basic_tools: [convert_webpage_url_into_markdown, duckduckgo_search_results]
   - id: websearch
     script: mcp_server_3.py
-    cwd: C:/Users/dsaha/OneDrive - Microsoft/Documents/Personal/deep/study/artificial intelligence/eagv1/eag9/sample
+    cwd: C:/Users/dsaha/OneDrive - Microsoft/Documents/Personal/deep/study/artificial intelligence/eagv1/eag9/e9
     description: "Webtools to search internet for queries and fetch content for a specific web page"
     capabilities: ["duckduckgo_search_results", "download_raw_html_from_url"]
     basic_tools: [duckduckgo_search_results]

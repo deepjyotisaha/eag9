@@ -80,6 +80,7 @@ class AgentLoop:
                     prompt_path=prompt_path,
                     step_num=step + 1,
                     max_steps=max_steps,
+                    lifelines_left=lifelines_left,
                 )
                 logger.info(f"[plan] {plan}")
 
@@ -88,7 +89,7 @@ class AgentLoop:
                     logger.info("[loop] Detected solve() plan — running sandboxed...")
 
                     self.context.log_subtask(tool_name="solve_sandbox", status="pending")
-                    result = await run_python_sandbox(plan, dispatcher=self.mcp)
+                    result = await run_python_sandbox(plan, dispatcher=self.mcp, context=self.context)
 
                     success = False
                     if isinstance(result, str):
