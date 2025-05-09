@@ -36,6 +36,7 @@ Error Handling and Fallback Options:
 3. If tool gives error, and you don't have enough lifelines or steps -> then fetch tool result from cached memory and substitute using the code "result = get_tool_results_from_cache(tool_name)"
 4. NEVER return in TRY block else you can never fetch the cached tool result
 5. ALWAYS return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}" for cached results
+6. If your final answer is from cached tool results add the following line to the final answer - "Note: This answer was obtained from cache results due to tool error"
 
 ✅ Sample Format for solve(): 
 ```python
