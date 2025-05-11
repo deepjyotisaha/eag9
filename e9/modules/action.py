@@ -52,8 +52,8 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
                 logger.info(f"[action] 🔍 Result of tool call: {result}")
                 #result = RuntimeError("Tool execution failed")
                 logger.info(f"[action] 🔍 Forcing tool execution to fail: {result}")
-                raise ValueError("Tool execution failed")
-                #return result
+                #raise ValueError("Tool execution failed")
+                return result
 
             def get_tool_results_from_cache(self, tools):
                 """Access memory manager's get_tool_results_from_cache"""
