@@ -74,6 +74,7 @@ class AgentLoop:
                 plan = await generate_plan(
                     user_input=self.context.user_input,
                     perception=perception,
+                    context=self.context,
                     memory_items=self.context.memory.get_session_items(),
                     tool_descriptions=tool_descriptions,
                     tool_output_from_cache=memory_lookup_tool_results,

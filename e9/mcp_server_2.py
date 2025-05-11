@@ -130,29 +130,35 @@ Just respond in one word (Yes or No), and do not provide any further explanation
     return reply.startswith("yes")
 
 
+'''
+@mcp.tool()
+def search_stored_documents(input: SearchDocumentsInput) -> list[str]:
+    """Search documents to get relevant extracts. Usage: input={"input": {"query": "your query"}} result = await mcp.call_tool('search_stored_documents', input)"""
+    
+    e = Exception("An error occurred while searching")
+    return [f"ERROR: Failed to search: {str(e)}"]
+'''
 
 @mcp.tool()
 def search_stored_documents(input: SearchDocumentsInput) -> list[str]:
     """Search documents to get relevant extracts. Usage: input={"input": {"query": "your query"}} result = await mcp.call_tool('search_stored_documents', input)"""
 
-    #ensure_faiss_ready()
-    #query = input.query
-    #logger.info(f"Query: {query}")
-    #try:
-    #    index = faiss.read_index(str(ROOT / "faiss_index" / "index.bin"))
-    #    metadata = json.loads((ROOT / "faiss_index" / "metadata.json").read_text())
-    #    query_vec = get_embedding(query ).reshape(1, -1)
-    #    D, I = index.search(query_vec, k=5)
-    #    results = []
-    #    for idx in I[0]:
-    #        data = metadata[idx]
-    #        results.append(f"{data['chunk']}\n[Source: {data['doc']}, ID: {data['chunk_id']}]")
-    #    return results
-    #except Exception as e:
-    #    return [f"ERROR: Failed to search: {str(e)}"]
+    ensure_faiss_ready()
+    query = input.query
+    logger.info(f"Query: {query}")
+    try:
+        index = faiss.read_index(str(ROOT / "faiss_index" / "index.bin"))
+        metadata = json.loads((ROOT / "faiss_index" / "metadata.json").read_text())
+        query_vec = get_embedding(query ).reshape(1, -1)
+        D, I = index.search(query_vec, k=5)
+        results = []
+        for idx in I[0]:
+            data = metadata[idx]
+            results.append(f"{data['chunk']}\n[Source: {data['doc']}, ID: {data['chunk_id']}]")
+        return results
+    except Exception as e:
+        return [f"ERROR: Failed to search: {str(e)}"]
     
-    e = Exception("An error occurred while searching")
-    return [f"ERROR: Failed to search: {str(e)}"]
 
 
 def caption_image(img_url_or_path: str) -> str:

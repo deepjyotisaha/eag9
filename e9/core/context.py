@@ -87,6 +87,87 @@ class AgentContext:
         """Add item to memory"""
         self.memory.add(item)
 
+
+    def format_sandbox_execution_history(self, memory_items, max_text_length=200):
+        """
+        Format memory items into a structured response showing sandbox execution history.
+        Limits large text chunks to make output more readable.
+        
+        Args:
+            memory_items: List of MemoryItem objects from the session
+            max_text_length: Maximum length for text chunks before truncation
+            
+        Returns:
+            str: Formatted string showing execution history
+        """
+        def truncate_text(text, max_length):
+            """Helper function to truncate text with ellipsis"""
+            if len(text) > max_length:
+                return text[:max_length] + "..."
+            return text
+
+        def extract_content(result):
+            """Helper function to extract and clean content from tool results"""
+            if not result:
+                return "No result"
+            
+            # Try to extract content from TextContent
+            if "content=" in result:
+                try:
+                    content_text = result.split("content=")[1].split("text='")[1].split("'")[0]
+                    # Clean up escaped characters
+                    content_text = content_text.replace("\\n", "\n").replace("\\'", "'")
+                    return truncate_text(content_text, max_text_length)
+                except:
+                    return truncate_text(result, max_text_length)
+            return truncate_text(result, max_text_length)
+
+        formatted_history = []
+        current_sandbox = None
+        
+        for item in memory_items:
+            # Only process tool_output items with sandbox tag
+            if item.type == "tool_output" and "sandbox" in item.tags:
+                # Start new sandbox execution section
+                if current_sandbox is None:
+                    current_sandbox = []
+                    formatted_history.append("Attempt to execute sandbox was done with the following outcomes:")
+                
+                # Extract plan from tool_args
+                plan = item.tool_args.get("plan", "")
+                
+                # Extract tool calls and their names from plan
+                tool_calls = []
+                for line in plan.split("\n"):
+                    if "FUNCTION_CALL:" in line:
+                        # Extract tool name from the next line that contains the tool call
+                        next_line = plan.split("\n")[plan.split("\n").index(line) + 1]
+                        if "await mcp.call_tool(" in next_line:
+                            tool_name = next_line.split("'")[1]  # Get tool name from the call
+                            # Truncate the tool call line if it's too long
+                            tool_call = truncate_text(next_line.strip(), max_text_length)
+                            tool_calls.append((tool_name, tool_call))
+                
+                # Add tool results
+                if item.tool_result and "result" in item.tool_result:
+                    result = item.tool_result["result"]
+                    # Add each tool call and its result
+                    for tool_name, tool_call in tool_calls:
+                        formatted_history.append(f"1. Called tool '{tool_name}' with: {tool_call}")
+                        formatted_history.append(f"2. Tool '{tool_name}' returned: {extract_content(result)}")
+                
+                # Add final sandbox result
+                if item.success:
+                    formatted_history.append(f"Finally sandbox returned: {extract_content(result)}")
+                else:
+                    formatted_history.append(f"Finally sandbox failed with: {extract_content(result)}")
+                
+                # Add separator between different sandbox executions
+                formatted_history.append("---")
+                current_sandbox = None
+        
+        return "\n".join(formatted_history)    
+
     def format_history_for_llm(self) -> str:
         if not self.tool_calls:
             return "No previous actions"

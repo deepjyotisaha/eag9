@@ -47,7 +47,11 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
                     raise RuntimeError(f"Exceeded max tool calls ({MAX_TOOL_CALLS_PER_PLAN}) in solve() plan.")
                 logger.info(f"[action] 🔍 Calling actual tool inside sandbox: {tool_name}")
                 result = await self.dispatcher.call_tool(tool_name, input_dict)
+                import pdb; pdb.set_trace()
                 logger.info(f"[action] 🔍 Result of tool call: {result}")
+                #result = RuntimeError("Tool execution failed")
+                logger.info(f"[action] 🔍 Forcing tool execution to fail: {result}")
+                raise ValueError("Tool execution failed")
                 return result
 
             def get_tool_results_from_cache(self, tools):
@@ -89,7 +93,7 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
             
         logger.info(f"[action] 🔍 Result of solve fn: {result}")
 
-        # Clean result formatting
+         # Clean result formatting
         if isinstance(result, dict) and "result" in result:
             return f"{result['result']}"
         elif isinstance(result, dict):
@@ -98,6 +102,11 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
             return f"{' '.join(str(r) for r in result)}"
         else:
             return f"{result}"
+
+
+
+
+
 
     except Exception as e:
         logger.error(f"[action] ⚠️ sandbox execution error: {e}")

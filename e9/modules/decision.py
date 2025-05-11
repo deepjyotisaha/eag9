@@ -29,6 +29,7 @@ model = ModelManager()
 async def generate_plan(
     user_input: str, 
     perception: PerceptionResult,
+    context: AgentContext,
     memory_items: List[MemoryItem],
     tool_descriptions: Optional[str],
     tool_output_from_cache: Optional[str],
@@ -40,11 +41,15 @@ async def generate_plan(
 
     """Generates the full solve() function plan for the agent."""
 
-    #memory_texts = "\n".join(f"- {m.text}" for m in memory_items) or "None"
+    memory_texts = "\n".join(f"- {m.text}" for m in memory_items) or "None"
     #memory_texts = context.format_history_for_llm() if context.tool_calls else "No previous actions"
-    memory_texts = memory_items
+    #memory_texts = memory_items
 
-    #logger.info(f"Memory texts: {memory_texts} \n\n")
+    logger.info(f"Memory texts: {memory_texts} \n\n")
+
+    #formatted_history = context.format_sandbox_execution_history(memory_texts)
+
+    #logger.info(f"Formatted history: {formatted_history} \n\n")
 
     prompt_path = "prompts/decision_prompt_conservative_optimized.txt"
 
@@ -64,7 +69,7 @@ async def generate_plan(
         lifelines_left=lifelines_left
     )
 
-    #logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
+    logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
 
     try:
         raw = (await model.generate_text(prompt)).strip()
