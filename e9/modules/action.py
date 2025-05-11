@@ -7,6 +7,7 @@ import types
 import json
 from config.log_config import setup_logging
 from core.context import AgentContext
+import yaml
 
 logger = setup_logging(__name__)
 
@@ -47,12 +48,12 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
                     raise RuntimeError(f"Exceeded max tool calls ({MAX_TOOL_CALLS_PER_PLAN}) in solve() plan.")
                 logger.info(f"[action] 🔍 Calling actual tool inside sandbox: {tool_name}")
                 result = await self.dispatcher.call_tool(tool_name, input_dict)
-                import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
                 logger.info(f"[action] 🔍 Result of tool call: {result}")
                 #result = RuntimeError("Tool execution failed")
                 logger.info(f"[action] 🔍 Forcing tool execution to fail: {result}")
                 raise ValueError("Tool execution failed")
-                return result
+                #return result
 
             def get_tool_results_from_cache(self, tools):
                 """Access memory manager's get_tool_results_from_cache"""
@@ -62,12 +63,24 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
 
          # Create a standalone function that uses the mcp instance
         def get_tool_results_from_cache(tool_name):
+            # Get lookback days from config
+            try:
+                with open("config/profiles.yaml", "r") as f:
+                    config = yaml.safe_load(f)
+                lookback_tool_results = config.get("memory", {}).get("lookback_tool_results", 2)
+                logger.info(f"[action] 🔍 Using lookback_tool_results={lookback_tool_results} from config")
+            except Exception as e:
+                logger.error(f"[action] 🔍 Failed to load config or parse lookback_tool_results: {e}")
+                lookback_tool_results = 2  # Default to 2 if config fails
+
             cached_results = sandbox.mcp.get_tool_results_from_cache([tool_name])
             if cached_results and len(cached_results) > 0:
-                # Get the most recent result
-                latest_result = cached_results[0]
-                # Return the exact tool_result as it was stored
-                return latest_result.tool_result
+                # Get the most recent results up to lookback_tool_results
+                results = cached_results[:lookback_tool_results]
+                logger.info(f"[action] 🔍 Found {len(results)} cached results for tool: {tool_name}")
+                # Return the most recent result
+                return results[0].tool_result
+            logger.info(f"[action] 🔍 No cached results found for tool: {tool_name}")
             return None
 
         # Preload safe built-ins into the sandbox

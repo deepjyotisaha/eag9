@@ -226,12 +226,6 @@ class MemoryManager:
         all_items = self.cached_memory_all
         logger.info(f"Total items in cached memory: {len(all_items)}")
         
-        # Log first few items to understand their structure
-        for i, item in enumerate(all_items[:5]):
-            logger.debug(f"Sample item {i}: type={item.type}, text={item.text[:200]}...")
-
-        filtered = []
-
         # Track the last N outputs for each tool
         tool_outputs = {tool_name: [] for tool_name in tool_names}
         logger.debug(f"Initialized tool_outputs tracking for: {list(tool_outputs.keys())}")
@@ -270,15 +264,14 @@ class MemoryManager:
             else:
                 logger.debug("No plan found in tool_args")
 
-        # Log summary of what we found for each tool
-        for tool_name, outputs in tool_outputs.items():
-            logger.info(f"Found {len(outputs)} outputs for tool '{tool_name}'")
-            if outputs:
-                logger.info(f"First output for '{tool_name}': {outputs[0].text[:200]}...")
+        # Filter out tools with no cached results
+        tools_with_cache = {name: outputs for name, outputs in tool_outputs.items() if outputs}
 
         # Combine all tool outputs into a single list
-        for tool_name, outputs in tool_outputs.items():
+        filtered = []
+        for tool_name, outputs in tools_with_cache.items():
             filtered.extend(outputs)
 
-        logger.info(f"Retrieved {len(filtered)} tool outputs from cache for tools: {tool_names}")
+        # Log only the tools that actually have cached results
+        logger.info(f"Retrieved {len(filtered)} tool outputs from cache for tools: {list(tools_with_cache.keys())}")
         return filtered

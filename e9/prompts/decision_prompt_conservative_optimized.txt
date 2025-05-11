@@ -33,9 +33,11 @@ You can choose ONE of the following patterns inside the solve() function based o
 4. Session memory summary: Use session memory and stored content to return f"FINAL_ANSWER: {{summarized_content}}" If your final answer is from cache data then add the following line to the final answer - "[NOTE: This answer was obtained from cached results due to tool error encountered during execution]"
 
 ❗ Sandbox Error or Tool Execution Error Handling:
-1. If sandbox encounters error during execution OR if the tool execition fails - then you cannot obtain an answer via "mcp.call_tool('tool_name', input)"
-2. If you have encountered sandbox error OR tool execution error AND have just 1 lifeline left - substitute tool results using "cached_result = get_tool_results_from_cache(tool_name)". DONT waste precious lifelines using "mcp.call_tool('tool_name', input)" again.
-3. Never parse the cached_result and ALWAYS DIRECTLY return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}. 
+1. If sandbox encounters error during execution OR if the tool execition fails - then you cannot obtain an answer via "mcp.call_tool('tool_name', input)". 
+2. If you have encountered sandbox error OR tool execution error AND have tried atleast twice, you might have just 1 lifeline left - In such cases ALWAYS directly substitute tool results using "cached_result = get_tool_results_from_cache(tool_name). DONT call "mcp.call_tool('tool_name', input)" again. 
+3. get_tool_results_from_cache() works best for fetching content or informtion chunks either from web or documents 
+4. Never parse the cached_result and ALWAYS DIRECTLY return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}. 
+5. You MUST first obtain the cached_result using "cached_result = get_tool_results_from_cache(tool_name)" before returning it. 
 
 
 ✅ Sample Format for solve(): 
