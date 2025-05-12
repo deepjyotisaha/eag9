@@ -31,6 +31,8 @@ MAX_TOOL_CALLS_PER_PLAN = 5
 async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) -> str:
     logger.info("[action] 🔍 Entered run_python_sandbox()")
 
+    #import pdb; pdb.set_trace()
+
     # Create a fresh module scope
     sandbox = types.ModuleType("sandbox")
 
@@ -85,7 +87,8 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
             except Exception as e:
                 logger.error(f"[action] 🔍 Failed to load config or parse lookback_tool_results: {e}")
                 lookback_tool_results = 2  # Default to 2 if config fails
-
+            
+            #import pdb; pdb.set_trace()
             cached_results = sandbox.mcp.get_tool_results_from_cache([tool_name])
             if cached_results and len(cached_results) > 0:
                 # Get the most recent results up to lookback_tool_results

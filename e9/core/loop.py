@@ -92,6 +92,7 @@ class AgentLoop:
                     self.context.log_subtask(tool_name="solve_sandbox", status="pending")
                     result = await run_python_sandbox(plan, dispatcher=self.mcp, context=self.context)
 
+
                     success = False
                     if isinstance(result, str):
                         result = result.strip()
@@ -132,6 +133,7 @@ class AgentLoop:
                             break  # Step will continue
                         elif result.startswith("[sandbox error:"):
                             success = False
+                            logger.error(f"[loop] 🔴 [sandbox error] occurred in step {step+1}: {result}")
                             self.context.final_answer = "FINAL_ANSWER: [Execution failed]"
                         else:
                             success = True

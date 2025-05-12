@@ -31,6 +31,7 @@ class MemoryManager:
     """Manages session memory (read/write/append)."""
 
     def __init__(self, session_id: str, memory_dir: str = "memory"):
+        logger.info(f"Initializing MemoryManager for session_id: {session_id}")
         self.session_id = session_id
         self.memory_dir = memory_dir
         #self.memory_path = os.path.join('memory', session_id.split('-')[0], session_id.split('-')[1], session_id.split('-')[2], f'session-{session_id}.json')
@@ -59,15 +60,16 @@ class MemoryManager:
         self.load_cached_memory()
 
     def load(self):
-        logger.info(f"Loading memory from {self.memory_path}")
-        if os.path.exists(self.memory_path):
-            with open(self.memory_path, "r", encoding="utf-8") as f:
-                raw = json.load(f)
-                self.items = [MemoryItem(**item) for item in raw]
-                logger.info(f"Loaded {len(self.items)} items from {self.memory_path}")
-        else:
-            logger.info(f"Memory file does not exist at {self.memory_path}")
-            self.items = []
+        self.items = []
+        #logger.info(f"Loading memory from {self.memory_path}")
+        #if os.path.exists(self.memory_path):
+        #    with open(self.memory_path, "r", encoding="utf-8") as f:
+        #        raw = json.load(f)
+        #        #self.items = [MemoryItem(**item) for item in raw]
+        #        logger.info(f"Loaded {len(self.items)} items from {self.memory_path}")
+        #else:
+        #    logger.info(f"Memory file does not exist at {self.memory_path}")
+        #    self.items = []
 
     def load_cached_memory(self, config_path="config/profiles.yaml"):
         """
@@ -232,7 +234,8 @@ class MemoryManager:
 
         # Process items in chronological order (newest first)
         for item in all_items:
-            if item.type != "tool_output":
+            # Only process successful tool outputs
+            if item.type != "tool_output" or not item.success:
                 continue
 
             # Log each tool_output item we're processing

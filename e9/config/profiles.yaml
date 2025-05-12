@@ -11,7 +11,7 @@ strategy:
   memory_fallback_enabled: true # after tool exploration failure
   max_steps: 3                  # max sequential agent steps
   max_lifelines_per_step: 3      # retries for each step (after primary failure)
-  simulate_sandbox_failure: true  # When true, forces sandbox errors for testing
+  simulate_sandbox_failure: false  # When true, forces sandbox errors for testing
 
 memory:
   memory_service: true
@@ -21,7 +21,7 @@ memory:
     base_dir: "memory"
     structure: "date"  # Indicates we're using date-based directory structure
   lookback_days: 7 # Added config for lookback days
-  lookback_tool_results: 5   # <--- Add this line
+  lookback_tool_results: 8   # <--- Add this line
 
 llm:
   text_generation: gemini #gemini or phi4 or gemma3:12b or qwen2.5:32b-instruct-q4_0 

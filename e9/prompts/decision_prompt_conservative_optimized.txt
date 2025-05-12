@@ -10,7 +10,7 @@ Approach:
 3. Evaluate lifelines → if there were tool/sandbox execution failures or errors? How many lifelines left?
 4. Evaluate number of steps → How many steps consumed, how many left?  
 3. Review Perception Inputs → Identify suggested next tasks.
-4. Define solve() → Solve in one execution.
+4. Define solve() → Solve in one execution - either conclude or implement next steps
 
 🧠 User Query: "{user_input}"
 
@@ -29,12 +29,14 @@ Approach:
 Inside the solve() function, you can choose ONLY ONE of the following patterns, but cannot mix patterns in a single solve() implementation:
 1. Sequential dependency: Chain tool outputs until final result, return f"FINAL_ANSWER: {{final_result}}"
 2. Independent sequential: Merge results in final answer, return f"FINAL_ANSWER: Wikipedia says {{tool_result_a}}. News says {{tool_result_b}}"
-3. Fetch information chunk: Obtain information chunks using tools, don't parse or prcocess further if previous result failed, ALWAYS return f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
+3. Fetch information chunk: Obtain information chunks using tools, NEVER parse or prcocess further if similar attempts failed, ALWAYS return f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
 4. Session memory summary: Use session memory and stored content to return f"FINAL_ANSWER: {{summarized_content}}" If your final answer is from cache data then add the following line to the final answer - "[NOTE: This answer was obtained from cached results due to tool error encountered during execution]"
 
-❗Look for sandbox errors or tool execution errors in "Session Memory" and if you have just "1" lifeline left in the "current step":
+❗Look for sandbox errors or tool execution errors in "Session Memory", if you had ERRORS AND if you have just "1" lifeline left in the "current step":
 1. You have access to function "get_tool_results_from_cache(tool_name)" which obtains the result of the specified tool_name from cache memory, and this works best for fetching content or informtion chunks either from web or documents  
-2. Ignore the above patterns, and obtain the tool result from cached memory using the following code "cached_result = get_tool_results_from_cache(tool_name)" and return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}.
+2. Ignore the above patterns completely, and fetch the tool result from cached memory using the following code "cached_result = get_tool_results_from_cache(tool_name)" and return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}.
+
+NOTE: Session Memory is the current working memory, and Cache Memory is an alternate source to fetch tool outputs if sandbox or tool execution fails.
 
 
 ✅ Sample Format for solve(): 
@@ -74,7 +76,7 @@ async def solve():
 - Never inline json.loads(...) in f-strings; assign to variable first.
 - NEVER parse document/webpage chunks to look for FINAL_ANSWER OR chain more tools based on result, always return f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
 - NEVER use "get_tool_results_from_cache(tool_name)" & "mcp.call_tool('tool_name', input)" in the same solve() function
-- NEVER return document/webpage chunks OR ERROR Messages in FINAL_ANSWER.
+- NEVER return document/webpage chunks OR FAILURE/ERROR Messages in FINAL_ANSWER.
 - NEVER return FINAL_ANSWER without the user query being solved if you have steps left to try out.
 
 """
