@@ -22,22 +22,19 @@ Approach:
 ⏳ Steps & Lifelines
 - You have a total of {max_steps} steps to solve the user query
 - You are currently at step number {step_num}
-- You have currently {lifelines_left} lifelines left for the current step
+- You have currently {lifelines_left} lifelines left in the current step
 
 📋 Perception Inputs: {perception}
 
-You can choose ONE of the following patterns inside the solve() function based on what is needed to answer the user query:
+Inside the solve() function, you can choose ONLY ONE of the following patterns, but cannot mix patterns in a single solve() implementation:
 1. Sequential dependency: Chain tool outputs until final result, return f"FINAL_ANSWER: {{final_result}}"
 2. Independent sequential: Merge results in final answer, return f"FINAL_ANSWER: Wikipedia says {{tool_result_a}}. News says {{tool_result_b}}"
 3. Fetch information chunk: Obtain information chunks using tools, don't parse or prcocess further if previous result failed, ALWAYS return f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
 4. Session memory summary: Use session memory and stored content to return f"FINAL_ANSWER: {{summarized_content}}" If your final answer is from cache data then add the following line to the final answer - "[NOTE: This answer was obtained from cached results due to tool error encountered during execution]"
 
-❗ Sandbox Error or Tool Execution Error Handling:
-1. If sandbox encounters error during execution OR if the tool execition fails - then you cannot obtain an answer via "mcp.call_tool('tool_name', input)". 
-2. If you have encountered sandbox error OR tool execution error AND have tried atleast twice, you might have just 1 lifeline left - In such cases ALWAYS directly substitute tool results using "cached_result = get_tool_results_from_cache(tool_name). DONT call "mcp.call_tool('tool_name', input)" again. 
-3. get_tool_results_from_cache() works best for fetching content or informtion chunks either from web or documents 
-4. Never parse the cached_result and ALWAYS DIRECTLY return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}. 
-5. You MUST first obtain the cached_result using "cached_result = get_tool_results_from_cache(tool_name)" before returning it. 
+❗Look for sandbox errors or tool execution errors in "Session Memory" and if you have just "1" lifeline left in the "current step":
+1. You have access to function "get_tool_results_from_cache(tool_name)" which obtains the result of the specified tool_name from cache memory, and this works best for fetching content or informtion chunks either from web or documents  
+2. Ignore the above patterns, and obtain the tool result from cached memory using the following code "cached_result = get_tool_results_from_cache(tool_name)" and return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}.
 
 
 ✅ Sample Format for solve(): 
@@ -76,7 +73,8 @@ async def solve():
 - Parse dependent results (parsed = json.loads(result.content[0].text)["result"]). (NEVER use ["results"], ALWAYS USE ["result"])
 - Never inline json.loads(...) in f-strings; assign to variable first.
 - NEVER parse document/webpage chunks to look for FINAL_ANSWER OR chain more tools based on result, always return f"FURTHER_PROCESSING_REQUIRED: {{tool_result}}"
-- NEVER return document/webpage chunks OR ERROR in FINAL_ANSWER.
+- NEVER use "get_tool_results_from_cache(tool_name)" & "mcp.call_tool('tool_name', input)" in the same solve() function
+- NEVER return document/webpage chunks OR ERROR Messages in FINAL_ANSWER.
 - NEVER return FINAL_ANSWER without the user query being solved if you have steps left to try out.
 
 """

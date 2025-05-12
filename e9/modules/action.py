@@ -35,33 +35,46 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
     sandbox = types.ModuleType("sandbox")
 
     try:
+        # Check if sandbox failure simulation is enabled
+        try:
+            with open("config/profiles.yaml", "r") as f:
+                config = yaml.safe_load(f)
+                simulate_failure = config.get("strategy", {}).get("simulate_sandbox_failure", False)
+        except Exception as e:
+            logger.error(f"[action] 🔍 Failed to load config or parse simulate_sandbox_failure: {e}")
+            simulate_failure = False
+
         # Patch MCP client with real dispatcher and context
         class SandboxMCP:
             def __init__(self, dispatcher, context):
                 self.dispatcher = dispatcher
                 self.call_count = 0
                 self.memory = context.memory
+                self.simulate_failure = simulate_failure
 
             async def call_tool(self, tool_name: str, input_dict: dict):
                 self.call_count += 1
                 if self.call_count > MAX_TOOL_CALLS_PER_PLAN:
                     raise RuntimeError(f"Exceeded max tool calls ({MAX_TOOL_CALLS_PER_PLAN}) in solve() plan.")
+                
+                # If failure simulation is enabled, force failure for call_tool
+                if self.simulate_failure:
+                    logger.info(f"[action] 🔍 Simulating tool call failure for: {tool_name}")
+                    raise ValueError("Tool execution failed")
+                
                 logger.info(f"[action] 🔍 Calling actual tool inside sandbox: {tool_name}")
                 result = await self.dispatcher.call_tool(tool_name, input_dict)
-                #import pdb; pdb.set_trace()
                 logger.info(f"[action] 🔍 Result of tool call: {result}")
-                #result = RuntimeError("Tool execution failed")
-                logger.info(f"[action] 🔍 Forcing tool execution to fail: {result}")
-                #raise ValueError("Tool execution failed")
                 return result
 
             def get_tool_results_from_cache(self, tools):
                 """Access memory manager's get_tool_results_from_cache"""
+                # Always allow cache access, even when simulate_failure is True
                 return self.memory.get_tool_results_from_cache(tools)
 
         sandbox.mcp = SandboxMCP(dispatcher, context)
 
-         # Create a standalone function that uses the mcp instance
+        # Create a standalone function that uses the mcp instance
         def get_tool_results_from_cache(tool_name):
             # Get lookback days from config
             try:
@@ -106,7 +119,7 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
             
         logger.info(f"[action] 🔍 Result of solve fn: {result}")
 
-         # Clean result formatting
+        # Clean result formatting
         if isinstance(result, dict) and "result" in result:
             return f"{result['result']}"
         elif isinstance(result, dict):
@@ -115,11 +128,6 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
             return f"{' '.join(str(r) for r in result)}"
         else:
             return f"{result}"
-
-
-
-
-
 
     except Exception as e:
         logger.error(f"[action] ⚠️ sandbox execution error: {e}")

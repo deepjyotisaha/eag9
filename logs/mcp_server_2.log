@@ -1,3 +1,1 @@
-2025-05-12 01:12:08,507 - INFO - server:_handle_request:534 - Processing request of type CallToolRequest
-2025-05-12 01:12:08,508 - INFO - mcp_server_2:search_stored_documents:148 - Query: Anmol Singh DLF apartment Capbridge purchase price
-2025-05-12 01:12:10,607 - INFO - server:_handle_message:524 - Warning: PydanticDeprecatedSince211: Accessing the 'model_fields' attribute on the instance is deprecated. Instead, you should access this attribute from the model class. Deprecated in Pydantic V2.11 to be removed in V3.0.
+2025-05-12 19:51:19,528 - INFO - server:_handle_request:534 - Processing request of type ListToolsRequest
