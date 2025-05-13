@@ -22,7 +22,7 @@ Approach:
 ⏳ Steps & Lifelines
 - You have a total of {max_steps} steps to solve the user query
 - You are currently at step number {step_num}
-- You have currently {lifelines_left} lifelines left in the current step
+- You have {lifelines_left} lifelines left to get this step right
 
 📋 Perception Inputs: {perception}
 

@@ -31,7 +31,7 @@ MAX_TOOL_CALLS_PER_PLAN = 5
 async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) -> str:
     logger.info("[action] 🔍 Entered run_python_sandbox()")
 
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
 
     # Create a fresh module scope
     sandbox = types.ModuleType("sandbox")
@@ -69,15 +69,15 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
                 logger.info(f"[action] 🔍 Result of tool call: {result}")
                 return result
 
-            def get_tool_results_from_cache(self, tools):
+            def get_tool_results_from_cache(self, tools, input_params=None):
                 """Access memory manager's get_tool_results_from_cache"""
                 # Always allow cache access, even when simulate_failure is True
-                return self.memory.get_tool_results_from_cache(tools)
+                return self.memory.get_tool_results_from_cache(tools, input_params=input_params)
 
         sandbox.mcp = SandboxMCP(dispatcher, context)
 
         # Create a standalone function that uses the mcp instance
-        def get_tool_results_from_cache(tool_name):
+        def get_tool_results_from_cache(tool_name, input=None):
             # Get lookback days from config
             try:
                 with open("config/profiles.yaml", "r") as f:
@@ -89,7 +89,7 @@ async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) 
                 lookback_tool_results = 2  # Default to 2 if config fails
             
             #import pdb; pdb.set_trace()
-            cached_results = sandbox.mcp.get_tool_results_from_cache([tool_name])
+            cached_results = sandbox.mcp.get_tool_results_from_cache([tool_name], input_params=input)
             if cached_results and len(cached_results) > 0:
                 # Get the most recent results up to lookback_tool_results
                 results = cached_results[:lookback_tool_results]

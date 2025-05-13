@@ -11,7 +11,7 @@ strategy:
   memory_fallback_enabled: true # after tool exploration failure
   max_steps: 3                  # max sequential agent steps
   max_lifelines_per_step: 3      # retries for each step (after primary failure)
-  simulate_sandbox_failure: false  # When true, forces sandbox errors for testing
+  simulate_sandbox_failure: true  # When true, forces sandbox errors for testing
 
 memory:
   memory_service: true

@@ -207,6 +207,8 @@ class MemoryManager:
         where N is the lookback_days configured in profiles.yaml.
         If selected_tools is None, returns None.
         """
+        import pdb; pdb.set_trace()
+
         if selected_tools is None:
             logger.info("No selected_tools provided; returning None.")
             return None
@@ -231,7 +233,7 @@ class MemoryManager:
         
         # Track the last N outputs for each tool
         tool_outputs = {tool_name: [] for tool_name in tool_names}
-        logger.debug(f"Initialized tool_outputs tracking for: {list(tool_outputs.keys())}")
+        logger.info(f"Initialized tool_outputs tracking for: {list(tool_outputs.keys())}")
 
         # Process items in chronological order (newest first)
         for item in all_items:
@@ -240,7 +242,7 @@ class MemoryManager:
                 continue
 
             # Log each tool_output item we're processing
-            logger.debug(f"Processing tool_output item: {item.__dict__}")
+            logger.info(f"Processing tool_output item: {item.__dict__}")
             
             # Extract actual tool name from tool_args.plan
             if hasattr(item, 'tool_args') and isinstance(item.tool_args, dict) and 'plan' in item.tool_args:
@@ -250,23 +252,23 @@ class MemoryManager:
                 tool_call_match = re.search(r"await\s+mcp\.call_tool\s*\(\s*['\"]([^'\"]+)['\"]", plan)
                 if tool_call_match:
                     actual_tool_name = tool_call_match.group(1)
-                    logger.debug(f"Extracted actual tool name from plan: {actual_tool_name}")
+                    logger.info(f"Extracted actual tool name from plan: {actual_tool_name}")
                     
                     # Check if this item is for one of our selected tools
                     for tool_name in tool_names:
                         if actual_tool_name == tool_name:
-                            logger.debug(f"Found match for tool '{tool_name}' in item")
+                            logger.info(f"Found match for tool '{tool_name}' in item")
                             # If we haven't collected N outputs for this tool yet, add it
                             if len(tool_outputs[tool_name]) < lookback_tool_results:
                                 tool_outputs[tool_name].append(item)
-                                logger.debug(f"Added item to outputs for '{tool_name}' (now has {len(tool_outputs[tool_name])} items)")
+                                logger.info(f"Added item to outputs for '{tool_name}' (now has {len(tool_outputs[tool_name])} items)")
                                 break  # Move to next item once we've matched a tool
                         else:
-                            logger.debug(f"Tool '{tool_name}' not found in item tool_name")
+                            logger.info(f"Tool '{tool_name}' not found in item tool_name")
                 else:
-                    logger.debug("No tool call found in plan")
+                    logger.info("No tool call found in plan")
             else:
-                logger.debug("No plan found in tool_args")
+                logger.info("No plan found in tool_args")
 
         # Filter out tools with no cached results
         tools_with_cache = {name: outputs for name, outputs in tool_outputs.items() if outputs}
@@ -296,33 +298,58 @@ class MemoryManager:
         Returns:
             Filtered list of results that match the input parameters
         """
+        logger.info(f"[memory] 🔍 Starting input params filtering with {len(results)} results")
+        logger.info(f"[memory] 🔍 Input params to match against: {input_params}")
+        
+        # Dump first result for debugging
+        if results:
+            logger.info(f"[memory] 🔍 Sample result structure: {results[0]}")
+            logger.info(f"[memory] 🔍 Sample result tool_args: {results[0].tool_args}")
+            logger.info(f"[memory] 🔍 Sample result plan: {results[0].tool_args.plan if hasattr(results[0].tool_args, 'plan') else 'No plan'}")
+        
         if not input_params:
+            logger.info("[memory] 🔍 No input params provided, returning all results")
             return results
         
         filtered_results = []
-        for result in results:
+        for idx, result in enumerate(results):
+            logger.info(f"[memory] 🔍 Processing result {idx}")
+            
             # Extract plan from tool_args if it exists
-            plan = result.get('tool_args', {}).get('plan', '')
+            plan = result.tool_args.plan if hasattr(result.tool_args, 'plan') else ''
             if not plan:
+                logger.info(f"[memory] 🔍 Result {idx} has no plan, skipping")
                 continue
+            
+            logger.info(f"[memory] 🔍 Result {idx} plan content: {plan}")
             
             # Extract input parameters from the plan
             plan_input_params = {}
             try:
                 # Look for input = {...} pattern in the plan
                 input_lines = [line for line in plan.split('\n') if 'input = {' in line]
+                logger.info(f"[memory] 🔍 Found {len(input_lines)} input lines in plan")
+                
                 if input_lines:
                     # Get the last input definition (most recent)
                     input_str = input_lines[-1].split('input = ')[1].strip()
+                    logger.info(f"[memory] 🔍 Extracted input string: {input_str}")
+                    
                     # Convert string representation to dict
                     plan_input_params = eval(input_str)
-            except:
+                    logger.info(f"[memory] 🔍 Extracted plan input params: {plan_input_params}")
+            except Exception as e:
+                logger.warning(f"[memory] 🔍 Failed to extract input params from plan: {e}")
                 continue
             
             # Check if the input parameters match
             if self._do_input_params_match(plan_input_params, input_params):
+                logger.info(f"[memory] 🔍 Result {idx} matched input params")
                 filtered_results.append(result)
+            else:
+                logger.info(f"[memory] 🔍 Result {idx} did not match input params")
             
+        logger.info(f"[memory] 🔍 Filtered to {len(filtered_results)} matching results")
         return filtered_results
 
     def _do_input_params_match(self, plan_params: dict, target_params: dict) -> bool:
@@ -337,19 +364,30 @@ class MemoryManager:
         Returns:
             True if parameters match, False otherwise
         """
+        logger.info(f"[memory] �� Starting parameter matching")
+        logger.info(f"[memory] 🔍 Plan params: {plan_params}")
+        logger.info(f"[memory] 🔍 Target params: {target_params}")
+        
         if not plan_params or not target_params:
+            logger.info("[memory] 🔍 Missing plan or target params")
             return False
         
         # Extract the actual input parameters from the nested structure
         plan_input = plan_params.get('input', {})
         target_input = target_params.get('input', {})
         
+        logger.info(f"[memory] 🔍 Plan input: {plan_input}")
+        logger.info(f"[memory] 🔍 Target input: {target_input}")
+        
         # Check if all keys in target_input exist in plan_input
         for key, value in target_input.items():
+            logger.info(f"[memory] 🔍 Checking key: {key}")
             if key not in plan_input:
+                logger.info(f"[memory] 🔍 Key {key} not found in plan input")
                 return False
             
             plan_value = plan_input[key]
+            logger.info(f"[memory] 🔍 Comparing values - Plan: {plan_value}, Target: {value}")
             
             # Special handling for string parameters
             if isinstance(value, str) and isinstance(plan_value, str):
@@ -358,11 +396,16 @@ class MemoryManager:
                 plan_value = plan_value.lower()
                 
                 # Use fuzzy matching with a threshold of 80
-                # This means strings that are 80% similar will match
-                if fuzz.ratio(value, plan_value) < 80:
+                similarity = fuzz.ratio(value, plan_value)
+                logger.info(f"[memory] 🔍 String comparison for key {key}: similarity={similarity}%")
+                
+                if similarity < 80:
+                    logger.info(f"[memory] 🔍 String similarity below threshold for key {key}")
                     return False
             # Exact matching for non-string values
             elif plan_value != value:
+                logger.info(f"[memory] 🔍 Non-string values don't match for key {key}")
                 return False
             
+        logger.info("[memory] 🔍 All parameters matched successfully")
         return True
