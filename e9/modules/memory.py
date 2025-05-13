@@ -6,10 +6,11 @@ import time
 import yaml
 import re
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel
 from config.log_config import setup_logging
 import difflib
+from fuzzywuzzy import fuzz
 
 logger = setup_logging(__name__)
 
@@ -200,7 +201,7 @@ class MemoryManager:
         """
         return self.items
     
-    def get_tool_results_from_cache(self, selected_tools=None):
+    def get_tool_results_from_cache(self, selected_tools=None, input_params=None):
         """
         Returns a list of the last N tool outputs from cached memory for the selected tools,
         where N is the lookback_days configured in profiles.yaml.
@@ -277,4 +278,91 @@ class MemoryManager:
 
         # Log only the tools that actually have cached results
         logger.info(f"Retrieved {len(filtered)} tool outputs from cache for tools: {list(tools_with_cache.keys())}")
-        return filtered
+
+        if input_params:
+            results = self._filter_results_by_input_params(filtered, input_params)
+            return results
+        else:
+            return filtered
+
+    def _filter_results_by_input_params(self, results: List[Dict], input_params: dict) -> List[Dict]:
+        """
+        Filter cached results based on input parameters extracted from the plan.
+        
+        Args:
+            results: List of cached results to filter
+            input_params: Input parameters to match against
+            
+        Returns:
+            Filtered list of results that match the input parameters
+        """
+        if not input_params:
+            return results
+        
+        filtered_results = []
+        for result in results:
+            # Extract plan from tool_args if it exists
+            plan = result.get('tool_args', {}).get('plan', '')
+            if not plan:
+                continue
+            
+            # Extract input parameters from the plan
+            plan_input_params = {}
+            try:
+                # Look for input = {...} pattern in the plan
+                input_lines = [line for line in plan.split('\n') if 'input = {' in line]
+                if input_lines:
+                    # Get the last input definition (most recent)
+                    input_str = input_lines[-1].split('input = ')[1].strip()
+                    # Convert string representation to dict
+                    plan_input_params = eval(input_str)
+            except:
+                continue
+            
+            # Check if the input parameters match
+            if self._do_input_params_match(plan_input_params, input_params):
+                filtered_results.append(result)
+            
+        return filtered_results
+
+    def _do_input_params_match(self, plan_params: dict, target_params: dict) -> bool:
+        """
+        Check if the input parameters from plan match the target parameters.
+        Uses fuzzy matching for string parameters and exact matching for others.
+        
+        Args:
+            plan_params: Input parameters extracted from plan
+            target_params: Target parameters to match against
+            
+        Returns:
+            True if parameters match, False otherwise
+        """
+        if not plan_params or not target_params:
+            return False
+        
+        # Extract the actual input parameters from the nested structure
+        plan_input = plan_params.get('input', {})
+        target_input = target_params.get('input', {})
+        
+        # Check if all keys in target_input exist in plan_input
+        for key, value in target_input.items():
+            if key not in plan_input:
+                return False
+            
+            plan_value = plan_input[key]
+            
+            # Special handling for string parameters
+            if isinstance(value, str) and isinstance(plan_value, str):
+                # Convert both to lowercase for case-insensitive comparison
+                value = value.lower()
+                plan_value = plan_value.lower()
+                
+                # Use fuzzy matching with a threshold of 80
+                # This means strings that are 80% similar will match
+                if fuzz.ratio(value, plan_value) < 80:
+                    return False
+            # Exact matching for non-string values
+            elif plan_value != value:
+                return False
+            
+        return True
