@@ -69,7 +69,7 @@ async def generate_plan(
         lifelines_left=lifelines_left
     )
 
-    #logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
+    logger.info(f"Seeking plan for user input: {user_input}\n with prompt: {prompt}")
 
     try:
         raw = (await model.generate_text(prompt)).strip()

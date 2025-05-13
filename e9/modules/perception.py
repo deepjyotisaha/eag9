@@ -48,12 +48,14 @@ async def extract_perception(user_input: str, mcp_server_descriptions: dict) -> 
     servers_text = "\n".join(server_list)
 
     prompt_template = load_prompt(prompt_path)
-    
+
 
     prompt = prompt_template.format(
         servers_text=servers_text,
         user_input=user_input
     )
+
+    logger.info(f"Perception prompt: {prompt}")
     
 
     try:

@@ -24,12 +24,21 @@ You are a perception engine helping an AI agent to decide which MCP server(s) ar
   "tool_hint": "...",
   "selected_servers": ["server1", "server2"]
   "memory_lookup_queries": ["What information is available on God of Cricket", "What other sports are peferred by the user"]
+  "session_memory_snapshot": ["Step 1, Lifelines remaining 2: Executed tools .... which was success and returned useful information on ... which was captured",
+                              "Step 1, Lifelines remaining 1: Executed tools .... which returned error and no useful information could be captured"]
+  "useful_results": ["Result 1: The sum of 8 and 10 is 10 which may be helpful in answering log of sum of 10 and 8"
+                     "Result 2: Tesla is a publicly listed company with symbol TSLA"]
 }}
 
 ✅ Rules:
 - selected_servers must match server IDs exactly (e.g., server1, server2).
 - If none are a clear match, select all servers.
 - Keep output short and clean.
+- Maintain session_memory_snapshot to capture what has been done so far and what was the outcome of the steps
+- Maintain useful_results to capture all the useful information obtained so far which can help solve the user query
+- Never overwrite previous session_memory_snapshot or previous useful_results, always append to it.
+- If you have valid answers from tool calls, they are success
+
 
 Now generate the output:
 """

@@ -1,0 +1,19 @@
+[
+  {
+    "timestamp": 1747143167.7235925,
+    "type": "run_metadata",
+    "text": "Started new session with input: Get current F1 standings, top 3 only at 2025-05-13T13:32:47.723592",
+    "tool_name": null,
+    "tool_args": null,
+    "tool_result": null,
+    "final_answer": null,
+    "tags": [
+      "run_start"
+    ],
+    "success": null,
+    "metadata": {
+      "start_time": "2025-05-13T19:02:47.723592",
+      "step": 0
+    }
+  }
+]

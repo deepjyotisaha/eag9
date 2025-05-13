@@ -110,11 +110,19 @@ class AgentLoop:
                             logger.info(f"Adding tool output to memory: {result}")
                             return {"status": "done", "result": self.context.final_answer}
                         elif result.startswith("FURTHER_PROCESSING_REQUIRED:"):
-                            content = result.split("FURTHER_PROCESSING_REQUIRED:")[1].strip()
+                            #content = result.split("FURTHER_PROCESSING_REQUIRED:")[1].strip()
+                            content = result
+                            while content.startswith("FURTHER_PROCESSING_REQUIRED:"):
+                                content = content[len("FURTHER_PROCESSING_REQUIRED:"):].strip()
                             self.context.user_input_override  = (
                                 f"Original user task: {self.context.user_input}\n\n"
+                                f"Your last step was step number {step+1} with lifelines now left: {lifelines_left - 1}\n\n"
+                                f"Your last plan was:\n\n"
+                                f"{plan}\n\n"
                                 f"Your last tool produced this result:\n\n"
                                 f"{content}\n\n"
+                                f"Your last plan's status for success was:\n\n"
+                                f"{success}\n\n"
                                 f"If this fully answers the task, return:\n"
                                 f"FINAL_ANSWER: your answer\n\n"
                                 f"Otherwise, return the next FUNCTION_CALL."
@@ -135,6 +143,20 @@ class AgentLoop:
                             success = False
                             logger.error(f"[loop] 🔴 [sandbox error] occurred in step {step+1}: {result}")
                             self.context.final_answer = "FINAL_ANSWER: [Execution failed]"
+                            self.context.user_input_override  = (
+                                f"Original user task: {self.context.user_input}\n\n"
+                                f"Your last step was step number {step+1} with lifelines now left: {lifelines_left - 1}\n\n"
+                                f"Your last plan was:\n\n"
+                                f"{plan}\n\n"
+                                f" and there was a [sandbox error] in the execution of the plan\n\n"
+                                f"Your last tool produced this result:\n\n"
+                                f"{result}\n\n"
+                                f"Your last plan's status for success was:\n\n"
+                                f"{success}\n\n"
+                                f"If this fully answers the task, return:\n"
+                                f"FINAL_ANSWER: your answer\n\n"
+                                f"Otherwise, return the next FUNCTION_CALL."
+                            )
                         else:
                             success = True
                             self.context.final_answer = f"FINAL_ANSWER: {result}"
