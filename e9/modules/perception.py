@@ -55,7 +55,7 @@ async def extract_perception(user_input: str, mcp_server_descriptions: dict) -> 
         user_input=user_input
     )
 
-    logger.info(f"Perception prompt: {prompt}")
+    #logger.info(f"Perception prompt: {prompt}")
     
 
     try:

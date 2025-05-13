@@ -112,6 +112,7 @@ class AgentLoop:
                         elif result.startswith("FURTHER_PROCESSING_REQUIRED:"):
                             #content = result.split("FURTHER_PROCESSING_REQUIRED:")[1].strip()
                             content = result
+                            success = True
                             while content.startswith("FURTHER_PROCESSING_REQUIRED:"):
                                 content = content[len("FURTHER_PROCESSING_REQUIRED:"):].strip()
                             self.context.user_input_override  = (
