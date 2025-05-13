@@ -36,7 +36,7 @@ Inside the solve() function, you can choose ONLY ONE of the following patterns, 
 1. You have access to function "get_tool_results_from_cache(tool_name, input)" which obtains the result of the specified tool_name from cache memory, and this works best for fetching content or informtion chunks either from web or documents  
 2. Ignore the above patterns completely, and fetch the tool result from cached memory using the following code "cached_result = get_tool_results_from_cache(tool_name, input)" and return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}.
 
-NOTE: Session Memory is the current working memory, and Cache Memory is an alternate source to fetch tool outputs if sandbox or tool execution fails.
+NOTE: Session Memory is the current working memory, and Cache Memory is an alternate source to fetch tool outputs if sandbox or tool execution fails. Session Memory can be accessed directly and you dont need any function call; where Cache Memory can only be accessed via get_tool_results_from_cache(tool_name, input)
 
 
 ✅ Sample Format for solve(): 

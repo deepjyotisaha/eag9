@@ -1,1 +1,2 @@
-2025-05-14 00:33:25,980 - INFO - server:_handle_request:534 - Processing request of type ListToolsRequest
+2025-05-14 01:09:29,299 - INFO - server:_handle_request:534 - Processing request of type CallToolRequest
+2025-05-14 01:09:31,051 - INFO - _client:_send_single_request:1740 - HTTP Request: POST https://html.duckduckgo.com/html "HTTP/1.1 200 OK"
