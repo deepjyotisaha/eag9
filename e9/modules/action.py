@@ -31,7 +31,7 @@ MAX_TOOL_CALLS_PER_PLAN = 5
 async def run_python_sandbox(code: str, dispatcher: Any, context: AgentContext) -> str:
     logger.info("[action] 🔍 Entered run_python_sandbox()")
 
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
 
     # Create a fresh module scope
     sandbox = types.ModuleType("sandbox")

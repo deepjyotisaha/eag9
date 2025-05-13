@@ -207,7 +207,7 @@ class MemoryManager:
         where N is the lookback_days configured in profiles.yaml.
         If selected_tools is None, returns None.
         """
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
 
         if selected_tools is None:
             logger.info("No selected_tools provided; returning None.")
@@ -242,7 +242,8 @@ class MemoryManager:
                 continue
 
             # Log each tool_output item we're processing
-            logger.info(f"Processing tool_output item: {item.__dict__}")
+            #logger.info(f"Processing tool_output item: {item.__dict__}")
+            logger.info(f"Processing tool_output item: {str(item.__dict__)[:200]}...")
             
             # Extract actual tool name from tool_args.plan
             if hasattr(item, 'tool_args') and isinstance(item.tool_args, dict) and 'plan' in item.tool_args:
@@ -280,6 +281,7 @@ class MemoryManager:
 
         # Log only the tools that actually have cached results
         logger.info(f"Retrieved {len(filtered)} tool outputs from cache for tools: {list(tools_with_cache.keys())}")
+        logger.info(f"Now filtering results by input params: {input_params}")
 
         if input_params:
             results = self._filter_results_by_input_params(filtered, input_params)
@@ -305,7 +307,7 @@ class MemoryManager:
         if results:
             logger.info(f"[memory] 🔍 Sample result structure: {results[0]}")
             logger.info(f"[memory] 🔍 Sample result tool_args: {results[0].tool_args}")
-            logger.info(f"[memory] 🔍 Sample result plan: {results[0].tool_args.plan if hasattr(results[0].tool_args, 'plan') else 'No plan'}")
+            logger.info(f"[memory] 🔍 Sample result plan: {results[0].tool_args.get('plan', '') if isinstance(results[0].tool_args, dict) else 'No plan'}")
         
         if not input_params:
             logger.info("[memory] 🔍 No input params provided, returning all results")
@@ -314,9 +316,10 @@ class MemoryManager:
         filtered_results = []
         for idx, result in enumerate(results):
             logger.info(f"[memory] 🔍 Processing result {idx}")
+            logger.info(f"[memory] 🔍 Processing result value: {str(result.__dict__)[:200]}...")
             
             # Extract plan from tool_args if it exists
-            plan = result.tool_args.plan if hasattr(result.tool_args, 'plan') else ''
+            plan = result.tool_args.get('plan', '') if isinstance(result.tool_args, dict) else ''
             if not plan:
                 logger.info(f"[memory] 🔍 Result {idx} has no plan, skipping")
                 continue
@@ -364,7 +367,7 @@ class MemoryManager:
         Returns:
             True if parameters match, False otherwise
         """
-        logger.info(f"[memory] �� Starting parameter matching")
+        logger.info(f"[memory] 🔍 Starting parameter matching")
         logger.info(f"[memory] 🔍 Plan params: {plan_params}")
         logger.info(f"[memory] 🔍 Target params: {target_params}")
         
