@@ -16,7 +16,6 @@ class StrategyProfile(BaseModel):
     memory_fallback_enabled: bool
     max_steps: int
     max_lifelines_per_step: int
-    cache_fallback: bool = True  # Default to True for backward compatibility
 
 
 class AgentProfile:

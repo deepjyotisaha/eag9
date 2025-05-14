@@ -2,7 +2,7 @@
 
 ## Original Bugs Fixed
 
-### 1. Decision Not Seeing Perception and Memory
+### Bug 1. Decision was not seeing perception and memory outputs
 **Problem:**
 - Decision module was not receiving perception and memory data
 - Caused by improper data flow between modules
@@ -13,14 +13,9 @@
 async def run(self):
     # ... existing code ...
     
-    # Get additional facts from memory
-    memory_lookup_queries = perception.memory_lookup_queries
-    logger.info(f"[memory] Memory lookup queries: {memory_lookup_queries}")
 
-    # Get tool results from cache   
-    memory_lookup_tool_results = self.context.memory.get_tool_results_from_cache(selected_tools)
-    logger.info(f"[memory] Found {len(memory_lookup_tool_results)} tool results from cache")
-    
+    # Perception inputs and get_session items were added to give memory results to desicion
+    #    
     plan = await generate_plan(
         user_input=self.context.user_input,
         perception=perception,
@@ -35,7 +30,7 @@ async def run(self):
     )
 ```
 
-### 2. Tool Output Memory Not Being Saved
+### Bug 2. Tool Outputs were not being saved to memory 
 **Problem:**
 - Tool execution results weren't being persisted
 - Decision module couldn't access previous tool outputs
@@ -54,7 +49,7 @@ async def run(self):
     logger.info(f"Adding tool output to memory: {result}")
 ```
 
-### 3. Incorrect Prompt Examples in Decision Prompt
+### Bug 3. Incorrect prompt examples in Decision Prompt
 **Problem:**
 - Decision prompts had incorrect or outdated examples
 - Caused confusion in tool selection and execution
@@ -63,78 +58,88 @@ async def run(self):
 - Updated prompt templates with correct examples
 - Added validation for prompt examples
 - Implemented proper error handling for prompt generation
+- Added cache-aware decision prompts:
+  - `prompts/decision_prompt_conservative_optimized.txt` - Cache-enabled prompt
+  - `prompts/decision_prompt_conservative_optimized_no_cache.txt` - No-cache prompt
+- Implemented cache fallback configuration in profiles.yaml:
+```yaml
+strategy:
+    cache_fallback: false          # When true, uses cache-enabled prompt, otherwise uses no-cache prompt
+```
 
 ## Cache Memory Implementation
 
-### 1. Cache Structure
-```python
-# In core/memory.py
-class Memory:
-    def __init__(self):
-        self.tool_cache = {}  # Cache for tool results
-        self.session_items = []  # Current session memory
-        self.cache_ttl = 3600  # Cache time-to-live in seconds
+### Step 1: LLM Code Generation for solve() with Cache Awareness
+The system uses two different prompts to guide the LLM in generating the `solve()` function:
 
-    def add_tool_output(self, tool_name: str, tool_args: dict, tool_result: dict, success: bool, tags: List[str]):
-        """Add tool output to cache and session memory"""
-        cache_key = self._generate_cache_key(tool_name, tool_args)
-        self.tool_cache[cache_key] = {
-            'result': tool_result,
-            'timestamp': time.time(),
-            'success': success,
-            'tags': tags
-        }
+1. **Cache-Enabled Prompt** (`decision_prompt_conservative_optimized.txt`):
+   - Includes cache-specific instructions for the LLM
+   - Provides access to `get_tool_results_from_cache(tool_name, input)` function
+   - Instructs LLM to use cache when:
+     - There are sandbox/tool execution errors
+     - Only 1 lifeline is left in the current step
+   - Requires LLM to add note when using cached results: "[NOTE: This answer was obtained from cached results due to tool error encountered during execution]"
+
+2. **No-Cache Prompt** (`decision_prompt_conservative_optimized_no_cache.txt`):
+   - Simplified version without cache functionality
+   - Focuses on direct tool execution
+   - Uses available tool results from session memory
+   - No cache-related functions or instructions
+
+The LLM generates code based on these patterns:
+
+```python
+
+cached_result = get_tool_results_from_cache(tool_name, input)
+return f"FURTHER_PROCESSING_REQUIRED: {{cached_result}}.
+
+```
+The cache fallback is controlled by the `cache_fallback` setting in `profiles.yaml`:
+```yaml
+strategy:
+  cache_fallback: true  # When true, uses cache-enabled prompt
 ```
 
-### 2. Cache Retrieval
+This implementation ensures that:
+1. The LLM is aware of cache availability when configured
+2. Cache is used as a fallback mechanism when tools fail
+3. Users are informed when cached results are used
+4. The system can operate without cache when needed
+
+### Step 2: Sandbox code executes the function to fetch cached tool results from cached memory
+
+The cached tool result is then fetched via the execution in sandbox:
+
 ```python
-    def get_tool_results_from_cache(self, tools: List[str]) -> Dict[str, Any]:
-        """Retrieve tool results from cache"""
-        cached_results = {}
-        current_time = time.time()
-        
-        for tool in tools:
-            if tool in self.tool_cache:
-                cache_entry = self.tool_cache[tool]
-                if current_time - cache_entry['timestamp'] < self.cache_ttl:
-                    cached_results[tool] = cache_entry['result']
-        
-        return cached_results
+# In modules/action.py
+async def run_python_sandbox(code: str, dispatcher: Any) -> str:
+    print("[action] 🔍 Entered run_python_sandbox()")
+
+    # Create a fresh module scope
+    sandbox = types.ModuleType("sandbox")
+
+    try:
+        # Patch MCP client with real dispatcher
+        class SandboxMCP:
+            def __init__(self, dispatcher):
+                self.dispatcher = dispatcher
+                self.call_count = 0
+
+            async def call_tool(self, tool_name: str, input_dict: dict):
+                self.call_count += 1
+                if self.call_count > MAX_TOOL_CALLS_PER_PLAN:
+                    raise RuntimeError(f"Exceeded max tool calls ({MAX_TOOL_CALLS_PER_PLAN}) in solve() plan.")
+                
+                # Try to get result from cache first
+                cached_result = self.dispatcher.context.memory.get_tool_results_from_cache([tool_name])
+                if cached_result:
+                    logger.info(f"Using cached result for {tool_name}")
+                    return cached_result
+                
+                # If no cache, make the actual tool call
+                result = await self.dispatcher.call_tool(tool_name, input_dict)
+                return result
 ```
-
-### 3. Cache Fallback Mechanism
-```python
-# In core/loop.py
-    # When tool execution fails
-    if not success:
-        # Try to get result from cache
-        cached_result = self.context.memory.get_tool_results_from_cache([tool_name])
-        if cached_result:
-            logger.info(f"Using cached result for {tool_name}")
-            return cached_result
-```
-
-## Improvements Made
-
-1. **Memory Management**
-   - Implemented proper memory persistence
-   - Added cache TTL (Time To Live)
-   - Added memory cleanup for old entries
-
-2. **Tool Execution**
-   - Added proper error handling
-   - Implemented cache fallback
-   - Added success/failure tracking
-
-3. **Data Flow**
-   - Fixed perception to decision data flow
-   - Added proper memory lookup
-   - Implemented tool result caching
-
-4. **Logging and Monitoring**
-   - Added detailed logging for memory operations
-   - Added cache hit/miss tracking
-   - Added tool execution status logging
 
 ## Configuration Updates
 
@@ -149,39 +154,4 @@ memory:
     structure: "date"
   lookback_days: 7
   lookback_tool_results: 8
-  cache_ttl: 3600  # Cache time-to-live in seconds
 ```
-
-## Testing and Validation
-
-1. **Cache Hit Testing**
-   - Verify cache retrieval for repeated tool calls
-   - Check cache TTL expiration
-   - Validate cache cleanup
-
-2. **Memory Persistence**
-   - Verify tool results are saved
-   - Check memory lookup functionality
-   - Validate session memory management
-
-3. **Error Handling**
-   - Test cache fallback on tool failure
-   - Verify error logging
-   - Check recovery mechanisms
-
-## Future Improvements
-
-1. **Cache Optimization**
-   - Implement cache size limits
-   - Add cache compression
-   - Implement cache eviction policies
-
-2. **Memory Management**
-   - Add memory cleanup scheduling
-   - Implement memory compression
-   - Add memory backup/restore
-
-3. **Monitoring**
-   - Add cache hit/miss metrics
-   - Implement memory usage tracking
-   - Add performance monitoring
