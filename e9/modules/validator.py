@@ -136,12 +136,7 @@ class InputValidator:
             if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$', domain):
                 return "dont_process", "Invalid domain name format"
 
-            # Check URL reachability
-            loop = asyncio.get_event_loop()
-            status, message = loop.run_until_complete(self.check_url_reachability(url))
-            if status == "dont_process":
-                return status, message
-
+            # Remove URL reachability check from here - it's handled in validate_input
             return "process", None
         except Exception as e:
             logger.error(f"URL validation error: {str(e)}")
