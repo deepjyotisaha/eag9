@@ -1,1 +1,28 @@
 2025-05-14 20:21:51,656 - INFO - agent:main:23 - 🧠 Cortex-R Agent Ready
+2025-05-14 20:22:13,041 - INFO - memory:__init__:35 - Initializing MemoryManager for session_id: 2025/05/14/session-1747234333-4476e6
+2025-05-14 20:22:13,042 - INFO - memory:__init__:49 - Memory path: memory\2025\05\14\session-1747234333-4476e6.json
+2025-05-14 20:22:13,042 - INFO - memory:__init__:50 - Memory dir: memory
+2025-05-14 20:22:13,042 - INFO - memory:__init__:51 - Session id: 2025/05/14/session-1747234333-4476e6
+2025-05-14 20:22:13,043 - INFO - memory:__init__:56 - Memory path: memory\2025\05\14\session-1747234333-4476e6.json
+2025-05-14 20:22:13,400 - INFO - memory:load_cached_memory:119 - Loaded 970 items from cached memory
+2025-05-14 20:22:14,252 - ERROR - loop:run:44 - Input validation failed: Invalid URL format
+2025-05-14 20:22:14,254 - INFO - agent:main:66 - 
+💡 Final Answer (raw): Input validation failed: Invalid URL format
+2025-05-14 20:22:18,338 - INFO - memory:__init__:35 - Initializing MemoryManager for session_id: 2025/05/14/session-1747234333-4476e6
+2025-05-14 20:22:18,339 - INFO - memory:__init__:49 - Memory path: memory\2025\05\14\session-1747234333-4476e6.json
+2025-05-14 20:22:18,340 - INFO - memory:__init__:50 - Memory dir: memory
+2025-05-14 20:22:18,341 - INFO - memory:__init__:51 - Session id: 2025/05/14/session-1747234333-4476e6
+2025-05-14 20:22:18,342 - INFO - memory:__init__:56 - Memory path: memory\2025\05\14\session-1747234333-4476e6.json
+2025-05-14 20:22:18,818 - INFO - memory:load_cached_memory:119 - Loaded 971 items from cached memory
+2025-05-14 20:22:20,080 - ERROR - loop:run:44 - Input validation failed: Invalid URL format
+2025-05-14 20:22:20,081 - INFO - agent:main:66 - 
+💡 Final Answer (raw): Input validation failed: Invalid URL format
+2025-05-14 20:23:09,284 - INFO - memory:__init__:35 - Initializing MemoryManager for session_id: 2025/05/14/session-1747234333-4476e6
+2025-05-14 20:23:09,285 - INFO - memory:__init__:49 - Memory path: memory\2025\05\14\session-1747234333-4476e6.json
+2025-05-14 20:23:09,285 - INFO - memory:__init__:50 - Memory dir: memory
+2025-05-14 20:23:09,286 - INFO - memory:__init__:51 - Session id: 2025/05/14/session-1747234333-4476e6
+2025-05-14 20:23:09,287 - INFO - memory:__init__:56 - Memory path: memory\2025\05\14\session-1747234333-4476e6.json
+2025-05-14 20:23:09,542 - INFO - memory:load_cached_memory:119 - Loaded 971 items from cached memory
+2025-05-14 20:23:10,457 - ERROR - loop:run:44 - Input validation failed: URL is not reachable: [Errno 11001] getaddrinfo failed
+2025-05-14 20:23:10,457 - INFO - agent:main:66 - 
+💡 Final Answer (raw): Input validation failed: URL is not reachable: [Errno 11001] getaddrinfo failed
