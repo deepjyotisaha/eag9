@@ -12,6 +12,7 @@ strategy:
   max_steps: 3                  # max sequential agent steps
   max_lifelines_per_step: 3      # retries for each step (after primary failure)
   simulate_sandbox_failure: false  # When true, forces sandbox errors for testing
+  cache_fallback: false          # When true, uses cache-enabled prompt, otherwise uses no-cache prompt
 
 memory:
   memory_service: true

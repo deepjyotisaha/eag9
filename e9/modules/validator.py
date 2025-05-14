@@ -155,6 +155,20 @@ class InputValidator:
         if re.match(r'^(?:get|fetch|download|read|summarize|extract).*(?:from|at|in|on).*(?:http|www|\.com|\.org|\.net|\.io)', query, re.IGNORECASE):
             return "process", None
 
+        # Common words that might appear in natural language but are safe
+        safe_words = {
+            'use', 'document', 'file', 'read', 'write', 'open', 'close',
+            'find', 'search', 'look', 'check', 'get', 'set', 'run', 'start',
+            'stop', 'end', 'begin', 'create', 'delete', 'remove', 'add',
+            'update', 'change', 'modify', 'view', 'show', 'display', 'print'
+        }
+
+        # Check if the query contains only safe words and natural language
+        words = set(re.findall(r'\b\w+\b', query.lower()))
+        if words.issubset(safe_words):
+            return "process", None
+
+        # More specific code injection patterns
         for lang in self.supported_languages:
             patterns = {
                 'python': r'(?i)(?:^|\s)(?:import\s+\w+|def\s+\w+|class\s+\w+|from\s+\w+\s+import|as\s+\w+|try|except|finally|with|async|await|eval|exec|__import__)(?:\s|$)',
@@ -162,9 +176,14 @@ class InputValidator:
                 'javascript': r'(?i)(?:^|\s)(?:function\s+\w+|var\s+\w+|let\s+\w+|const\s+\w+|=>|async\s+function|await\s+\w+|eval\s*\(|setTimeout\s*\(|setInterval\s*\()(?:\s|$)',
                 'shell': r'(?i)(?:^|\s)(?:rm\s+-|del\s+/|mkdir\s+-|rmdir\s+/|chmod\s+\d+|chown\s+\w+|sudo\s+\w+|su\s+\w+|bash\s+-|sh\s+-)(?:\s|$)'
             }
+            
+            # Check for actual code patterns
             if re.search(patterns.get(lang, ''), query):
-                logger.debug(f"Code injection check failed for language {lang} with pattern: {patterns.get(lang, '')}")
-                return "dont_process", f"Potential {lang} code injection detected"
+                # Additional context check to avoid false positives
+                if not any(word in query.lower() for word in ['hint', 'example', 'like', 'similar', 'such as']):
+                    logger.debug(f"Code injection check failed for language {lang} with pattern: {patterns.get(lang, '')}")
+                    return "dont_process", f"Potential {lang} code injection detected"
+        
         return "process", None
 
     def check_blocked_content(self, text: str) -> Tuple[str, Optional[str]]:

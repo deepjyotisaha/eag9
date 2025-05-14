@@ -1,1 +1,2 @@
-2025-05-14 20:22:07,062 - INFO - server:_handle_request:534 - Processing request of type ListToolsRequest
+2025-05-15 00:15:46,464 - INFO - server:_handle_request:534 - Processing request of type CallToolRequest
+2025-05-15 00:15:47,751 - INFO - server:_handle_message:524 - Warning: PydanticDeprecatedSince211: Accessing the 'model_fields' attribute on the instance is deprecated. Instead, you should access this attribute from the model class. Deprecated in Pydantic V2.11 to be removed in V3.0.

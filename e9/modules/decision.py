@@ -6,6 +6,8 @@ from modules.tools import load_prompt
 import re
 from config.log_config import setup_logging
 from core.context import AgentContext
+import yaml
+from pathlib import Path
 
 
 logger = setup_logging(__name__)
@@ -22,6 +24,17 @@ logger = setup_logging(__name__)
 
 
 model = ModelManager()
+
+def get_cache_fallback_config() -> bool:
+    """Read cache_fallback configuration from profiles.yaml"""
+    try:
+        config_path = Path("config/profiles.yaml")
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+            return config.get('strategy', {}).get('cache_fallback', True)  # Default to True if not found
+    except Exception as e:
+        logger.error(f"Error reading cache_fallback config: {e}")
+        return True  # Default to True on error
 
 
 # prompt_path = "prompts/decision_prompt.txt"
@@ -51,7 +64,14 @@ async def generate_plan(
 
     #logger.info(f"Formatted history: {formatted_history} \n\n")
 
-    prompt_path = "prompts/decision_prompt_conservative_optimized.txt"
+      # Use cache_fallback configuration to determine which prompt to use
+    cache_fallback = get_cache_fallback_config()
+    if cache_fallback:
+        prompt_path = "prompts/decision_prompt_conservative_optimized.txt"
+    else:
+        prompt_path = "prompts/decision_prompt_conservative_optimized_no_cache.txt"
+
+    #prompt_path = "prompts/decision_prompt_conservative_optimized.txt"
 
     logger.info(f"Prompt path: {prompt_path}")
 

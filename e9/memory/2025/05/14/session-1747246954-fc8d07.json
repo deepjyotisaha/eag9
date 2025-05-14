@@ -1,0 +1,19 @@
+[
+  {
+    "timestamp": 1747246958.8768437,
+    "type": "run_metadata",
+    "text": "Started new session with input: What did Julie Samuel say with regards to Telsa Motors, hint: use document to find answer at 2025-05-14T18:22:38.876843",
+    "tool_name": null,
+    "tool_args": null,
+    "tool_result": null,
+    "final_answer": null,
+    "tags": [
+      "run_start"
+    ],
+    "success": null,
+    "metadata": {
+      "start_time": "2025-05-14T23:52:38.876843",
+      "step": 0
+    }
+  }
+]
