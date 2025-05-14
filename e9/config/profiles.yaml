@@ -58,3 +58,23 @@ mcp_servers:
   #   capabilities: ["get_current_conversations", "search_historical_conversations"]
   #   basic_tools: [get_current_conversations, search_historical_conversations]
 
+validation:
+  max_file_size_mb: 5
+  max_query_length: 1000
+  max_output_length: 10000
+  max_json_depth: 10
+  max_json_size_kb: 1024
+  supported_languages:
+    - python
+    - sql
+    - javascript
+    - shell
+  allowed_json_types:
+    - str
+    - int
+    - float
+    - bool
+    - list
+    - dict
+    - null
+

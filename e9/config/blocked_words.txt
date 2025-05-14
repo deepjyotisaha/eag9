@@ -1,0 +1,2 @@
+# Add your list of blocked words here
+# One word per line

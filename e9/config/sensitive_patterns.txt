@@ -1,0 +1,5 @@
+password\s*=\s*["\']\w+["\']
+api[_-]?key\s*=\s*["\']\w+["\']
+secret\s*=\s*["\']\w+["\']
+aws[_-]?key\s*=\s*["\']\w+["\']
+private[_-]?key\s*=\s*["\']\w+["\']

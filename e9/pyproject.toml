@@ -23,4 +23,5 @@ dependencies = [
     "rich>=14.0.0",
     "tqdm>=4.67.1",
     "trafilatura[all]>=2.0.0",
+    "validators>=0.22.0",
 ]

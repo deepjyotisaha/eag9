@@ -11,6 +11,7 @@ from core.context import AgentContext
 from modules.tools import summarize_tools
 import re
 from config.log_config import setup_logging
+from modules.validator import InputValidator, JsonValidator, OutputValidator
 
 logger = setup_logging(__name__)
 
@@ -29,9 +30,18 @@ class AgentLoop:
         self.context = context
         self.mcp = self.context.dispatcher
         self.model = ModelManager()
+        self.input_validator = InputValidator()
+        self.json_validator = JsonValidator()
+        self.output_validator = OutputValidator()
 
     async def run(self):
         max_steps = self.context.agent_profile.strategy.max_steps
+
+        # Add initial input validation
+        is_valid, message, processed_input = await self.validate_and_process_input(self.context.user_input)
+        if not is_valid:
+            logger.error(f"Input validation failed: {message}")
+            return {"status": "error", "result": f"Input validation failed: {message}"}
 
         for step in range(max_steps):
             logger.info(f"🔁 Step {step+1}/{max_steps} starting...")
@@ -97,6 +107,13 @@ class AgentLoop:
                     if isinstance(result, str):
                         result = result.strip()
                         if result.startswith("FINAL_ANSWER:"):
+
+                            # Add validation for final answer
+                            is_valid, message = await self.validate_output(result)
+                            if not is_valid:
+                                logger.error(f"Final answer validation failed: {message}")
+                                return {"status": "error", "result": f"Final answer validation failed: {message}"}
+                            
                             success = True
                             self.context.final_answer = result
                             self.context.update_subtask_status("solve_sandbox", "success")
@@ -192,3 +209,24 @@ class AgentLoop:
         logger.error("⚠️ Max steps reached without finding final answer.")
         self.context.final_answer = "FINAL_ANSWER: [Max steps reached]"
         return {"status": "done", "result": self.context.final_answer}
+
+    async def validate_and_process_input(self, user_input: str) -> tuple[bool, str, str]:
+        """Validate user input and return status, message, and processed input"""
+        status, message = self.input_validator.validate_input(user_input)
+        if status == "dont_process":
+            return False, message, user_input
+        return True, "", user_input
+
+    async def validate_json_response(self, response: str) -> tuple[bool, str]:
+        """Validate JSON response"""
+        is_valid, message = self.json_validator.validate(response)
+        if not is_valid:
+            return False, message
+        return True, ""
+
+    async def validate_output(self, response: str) -> tuple[bool, str]:
+        """Validate output content"""
+        is_valid, message = self.output_validator.validate_output(response)
+        if not is_valid:
+            return False, message
+        return True, ""
