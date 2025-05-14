@@ -37,11 +37,15 @@ class AgentLoop:
     async def run(self):
         max_steps = self.context.agent_profile.strategy.max_steps
 
-        # Add initial input validation
-        is_valid, message, processed_input = await self.validate_and_process_input(self.context.user_input)
-        if not is_valid:
-            logger.error(f"Input validation failed: {message}")
-            return {"status": "error", "result": f"Input validation failed: {message}"}
+        # Validate initial input
+        try:
+            is_valid, message, processed_input = await self.validate_and_process_input(self.context.user_input)
+            if not is_valid:
+                logger.error(f"Input validation failed: {message}")
+                return {"status": "error", "result": f"Input validation failed: {message}"}
+        except Exception as e:
+            logger.error(f"Error during input validation: {str(e)}")
+            return {"status": "error", "result": f"Validation error: {str(e)}"}
 
         for step in range(max_steps):
             logger.info(f"🔁 Step {step+1}/{max_steps} starting...")
@@ -212,10 +216,14 @@ class AgentLoop:
 
     async def validate_and_process_input(self, user_input: str) -> tuple[bool, str, str]:
         """Validate user input and return status, message, and processed input"""
-        status, message = self.input_validator.validate_input(user_input)
-        if status == "dont_process":
-            return False, message, user_input
-        return True, "", user_input
+        try:
+            status, message = await self.input_validator.validate_input(user_input)
+            if status == "dont_process":
+                return False, message, user_input
+            return True, "", user_input
+        except Exception as e:
+            logger.error(f"Error in input validation: {str(e)}")
+            return False, f"Validation error: {str(e)}", user_input
 
     async def validate_json_response(self, response: str) -> tuple[bool, str]:
         """Validate JSON response"""

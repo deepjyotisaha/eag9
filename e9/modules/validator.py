@@ -9,6 +9,8 @@ import hashlib
 from urllib.parse import urlparse
 import mimetypes
 import logging
+import httpx
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -86,22 +88,63 @@ class InputValidator:
         except Exception as e:
             return "dont_process", f"Error checking file size: {str(e)}"
 
-    def check_url(self, url: str) -> Tuple[str, Optional[str]]:
-        """Validate URL format and accessibility"""
+    async def check_url_reachability(self, url: str) -> Tuple[str, Optional[str]]:
+        """Check if URL is reachable"""
         try:
-            if not validators.url(url):
-                return "dont_process", "Invalid URL format"
-            
             # Add scheme if missing
             if not urlparse(url).scheme:
                 url = 'https://' + url
-            
+
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                try:
+                    response = await client.head(url, follow_redirects=True)
+                    if response.status_code >= 400:
+                        return "dont_process", f"URL returned error status code: {response.status_code}"
+                    return "process", None
+                except httpx.RequestError as e:
+                    return "dont_process", f"URL is not reachable: {str(e)}"
+        except Exception as e:
+            logger.error(f"URL reachability check error: {str(e)}")
+            return "dont_process", f"URL validation error: {str(e)}"
+
+    def check_url(self, url: str) -> Tuple[str, Optional[str]]:
+        """Validate URL format and accessibility"""
+        try:
+            # Add scheme if missing
+            if not urlparse(url).scheme:
+                url = 'https://' + url
+
+            # Basic URL format validation
+            if not validators.url(url):
+                return "dont_process", "Invalid URL format"
+
             # Check URL length
             if len(url) > 2048:  # Standard URL length limit
                 return "dont_process", "URL exceeds maximum length"
-            
+
+            # Check for valid domain
+            domain = urlparse(url).netloc
+            if not domain or '.' not in domain:
+                return "dont_process", "Invalid domain name"
+
+            # Check for common TLDs
+            valid_tlds = ['.com', '.org', '.net', '.edu', '.gov', '.io', '.co', '.info']
+            if not any(domain.endswith(tld) for tld in valid_tlds):
+                return "dont_process", "Invalid top-level domain"
+
+            # Check for valid characters in domain
+            if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$', domain):
+                return "dont_process", "Invalid domain name format"
+
+            # Check URL reachability
+            loop = asyncio.get_event_loop()
+            status, message = loop.run_until_complete(self.check_url_reachability(url))
+            if status == "dont_process":
+                return status, message
+
             return "process", None
         except Exception as e:
+            logger.error(f"URL validation error: {str(e)}")
             return "dont_process", f"URL validation error: {str(e)}"
 
     def check_query_length(self, query: str) -> Tuple[str, Optional[str]]:
@@ -113,13 +156,19 @@ class InputValidator:
 
     def check_code_injection(self, query: str) -> Tuple[str, Optional[str]]:
         """Check for potential code injection"""
+        # First, check if the query is a simple URL or file request
+        if re.match(r'^(?:get|fetch|download|read|summarize|extract).*(?:from|at|in|on).*(?:http|www|\.com|\.org|\.net|\.io)', query, re.IGNORECASE):
+            return "process", None
+
         for lang in self.supported_languages:
             patterns = {
-                'python': r'(?i)(?:^|\s)(?:import|def|class|from\s+\w+|as\s+\w+|try|except|finally|with|async|await|eval|exec|__import__)(?:\s|$)',
-                'sql': r'(?i)(?:^|\s)(?:SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|UNION|JOIN|WHERE)(?:\s|$)',
-                'javascript': r'(?i)(?:^|\s)(?:function|var|let|const|=>|async|await|eval|setTimeout|setInterval)(?:\s|$)'
+                'python': r'(?i)(?:^|\s)(?:import\s+\w+|def\s+\w+|class\s+\w+|from\s+\w+\s+import|as\s+\w+|try|except|finally|with|async|await|eval|exec|__import__)(?:\s|$)',
+                'sql': r'(?i)(?:^|\s)(?:SELECT\s+\w+|INSERT\s+INTO|UPDATE\s+\w+|DELETE\s+FROM|DROP\s+TABLE|ALTER\s+TABLE|CREATE\s+TABLE|TRUNCATE\s+TABLE|UNION\s+ALL|JOIN\s+\w+|WHERE\s+\w+)(?:\s|$)',
+                'javascript': r'(?i)(?:^|\s)(?:function\s+\w+|var\s+\w+|let\s+\w+|const\s+\w+|=>|async\s+function|await\s+\w+|eval\s*\(|setTimeout\s*\(|setInterval\s*\()(?:\s|$)',
+                'shell': r'(?i)(?:^|\s)(?:rm\s+-|del\s+/|mkdir\s+-|rmdir\s+/|chmod\s+\d+|chown\s+\w+|sudo\s+\w+|su\s+\w+|bash\s+-|sh\s+-)(?:\s|$)'
             }
             if re.search(patterns.get(lang, ''), query):
+                logger.debug(f"Code injection check failed for language {lang} with pattern: {patterns.get(lang, '')}")
                 return "dont_process", f"Potential {lang} code injection detected"
         return "process", None
 
@@ -148,45 +197,66 @@ class InputValidator:
                 return "dont_process", "Sensitive information detected"
         return "process", None
 
-    def validate_input(self, query: str) -> Tuple[str, Optional[str]]:
+    async def validate_input(self, query: str) -> Tuple[str, Optional[str]]:
         """Main validation function that runs all checks"""
         try:
-            # Check query length
-            status, message = self.check_query_length(query)
-            if status == "dont_process":
-                return status, message
+            # 1. Check query length
+            max_length = self.config.get('max_query_length', 1000)
+            if len(query) > max_length:
+                return "dont_process", f"Query length exceeds maximum limit of {max_length} characters"
 
-            # Check for blocked content
-            status, message = self.check_blocked_content(query)
-            if status == "dont_process":
-                return status, message
+            # 2. Check for blocked content
+            text_lower = query.lower()
+            for word in self.blocked_words:
+                if word.lower() in text_lower:
+                    return "dont_process", "Content contains blocked words"
 
-            # Check for code injection
+            # 3. Check for code injection
             status, message = self.check_code_injection(query)
             if status == "dont_process":
                 return status, message
 
-            # Check for sensitive information
+            # 4. Check for sensitive information
             status, message = self.check_sensitive_info(query)
             if status == "dont_process":
                 return status, message
 
-            # Check for file paths
+            # 5. Check for file paths
             file_paths = re.findall(r'[\w\-\.]+\.(?:pdf|txt|doc|docx|json|yaml|yml|py|sql|js)', query)
             for file_path in file_paths:
+                # Check file size
                 status, message = self.check_file_size(file_path)
                 if status == "dont_process":
                     return status, message
+                # Check file corruption
                 status, message = self.check_file_corruption(file_path)
                 if status == "dont_process":
                     return status, message
 
-            # Check for URLs
+            # 6. Check for URLs
             urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', query)
+            # Also check for URLs without protocol
+            urls.extend(re.findall(r'(?:^|\s)(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+', query))
+            
             for url in urls:
+                # First check URL format
                 status, message = self.check_url(url)
                 if status == "dont_process":
                     return status, message
+                
+                # Then check URL reachability
+                status, message = await self.check_url_reachability(url)
+                if status == "dont_process":
+                    return status, message
+
+            # 7. Check for empty or whitespace-only query
+            if not query.strip():
+                return "dont_process", "Empty query"
+
+            # 8. Check for minimum query length
+            min_length = self.config.get('min_query_length', 3)
+            if len(query.strip()) < min_length:
+                return "dont_process", f"Query too short (minimum {min_length} characters)"
 
             return "process", None
         except Exception as e:

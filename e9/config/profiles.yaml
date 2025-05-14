@@ -61,14 +61,14 @@ mcp_servers:
 validation:
   max_file_size_mb: 5
   max_query_length: 1000
+  min_query_length: 3
   max_output_length: 10000
-  max_json_depth: 10
   max_json_size_kb: 1024
+  max_json_depth: 10
   supported_languages:
     - python
     - sql
     - javascript
-    - shell
   allowed_json_types:
     - str
     - int
@@ -76,5 +76,4 @@ validation:
     - bool
     - list
     - dict
-    - null
 
